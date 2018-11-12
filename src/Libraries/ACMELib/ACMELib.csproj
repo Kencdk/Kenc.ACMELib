@@ -12,8 +12,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Ken Christensen</Authors>
     <Company>Ken Christensen</Company>
-    <PackageId>Kenc.LetsEncrypt</PackageId>
-    <Product>Kenc.LetsEncrypt</Product>
+    <PackageId>Kenc.ACMELib</PackageId>
+    <Product>Kenc.ACMELib</Product>
     <PackageDescription>ACME v2 compliant client implementation</PackageDescription>
     <PackageLicenseUrl>https://raw.githubusercontent.com/Kencdk/Kenc.ACMELib/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
