@@ -1,10 +1,10 @@
-# Kenc.ACMELib - Open Source
+# Kenc.ACMELib
 ![Build status](https://kenc.visualstudio.com/ACME/_apis/build/status/Build)
 [![Feature Requests](https://img.shields.io/github/issues/Kencdk/Kenc.ACMELib/feature-request.svg)](https://github.com/Kencdk/Kenc.ACMELib/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
 [![Bugs](https://img.shields.io/github/issues/Kencdk/Kenc.ACMELib/bug.svg)](https://github.com/Kencdk/Kenc.ACMELib/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Abug)
 [![NuGet](https://img.shields.io/nuget/v/Kenc.ACMELib.svg)][NuGet]
 
-C# Implementation of the [ACME protocol v2](https://tools.ietf.org/html/draft-ietf-acme-acme-11)
+Free and open source software [ACME protocol v2](https://tools.ietf.org/html/draft-ietf-acme-acme-11) implementation in C# .NET Core, allowing cross-platform automated interaction with certificate authorities like [Let's Encrypt](https://letsencrypt.org/).
 
 ## Contributing
 
