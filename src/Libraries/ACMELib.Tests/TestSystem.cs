@@ -12,7 +12,6 @@
     class TestSystem
     {
         private RSA rsaKey;
-        private string accountId = "123456";
         private Mock<IRestClient> restClient = new Mock<IRestClient>();
 
         public TestSystem()
@@ -22,12 +21,6 @@
         public TestSystem WithRSAKey(RSA key)
         {
             rsaKey = key;
-            return this;
-        }
-
-        public TestSystem WithAccountId(string accountId)
-        {
-            this.accountId = accountId;
             return this;
         }
 
@@ -52,7 +45,7 @@
             var restClientFactory = new Mock<IRestClientFactory>();
             restClientFactory.Setup(rcf => rcf.CreateRestClient(It.IsAny<Jws>())).Returns(restClient.Object);
 
-            var acmeClient = new ACMEClient(TestHelpers.baseUri.ToString(), rsaKey, accountId, restClientFactory.Object);
+            var acmeClient = new ACMEClient(TestHelpers.baseUri.ToString(), rsaKey, restClientFactory.Object);
             return (acmeClient, restClient);
         }
     }
