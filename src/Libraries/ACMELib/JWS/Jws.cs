@@ -49,8 +49,8 @@
 
             message.Signature = Base64UrlEncoded(
                 _rsa.SignData(Encoding.ASCII.GetBytes(message.Protected + "." + message.Payload),
-                                HashAlgorithmName.SHA256,
-                                RSASignaturePadding.Pkcs1));
+                    HashAlgorithmName.SHA256,
+                    RSASignaturePadding.Pkcs1));
 
             return message;
         }
