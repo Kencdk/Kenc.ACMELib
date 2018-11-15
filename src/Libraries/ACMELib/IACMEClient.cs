@@ -75,7 +75,7 @@
         /// <returns>A task representing the revoke action.</returns>
         /// <exception cref="Exceptions.API.UnauthorizedException">Thrown if the user isn't authorized to revoke the certificate.</exception>
         /// <exception cref="Exceptions.API.BadRevocationReasonException">Thrown if the <paramref name="revocationReason"/> isn't allowed.</exception>
-        Task RevokeCertificateAsync(X509Certificate2 certificate, RevocationReason revocationReason, CancellationToken cancellationToken = default);
+        Task RevokeCertificateAsync(X509Certificate certificate, RevocationReason revocationReason, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Request a certificate.

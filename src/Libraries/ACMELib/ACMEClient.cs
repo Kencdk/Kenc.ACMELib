@@ -32,9 +32,8 @@
         /// </summary>
         /// <param name="endpoint">The selected endpoint of the ACME server.</param>
         /// <param name="rsaKey">Encryption key for account.</param>
-        /// <param name="accountId">Account id.</param>
         /// <param name="restClientFactory">An instance of a <see cref="IRESTClient"/> for API requests.</param>
-        public ACMEClient(string endpoint, RSA rsaKey, string accountId, IRestClientFactory restClientFactory)
+        public ACMEClient(string endpoint, RSA rsaKey, IRestClientFactory restClientFactory)
         {
             if (endpoint == null)
             {
@@ -44,7 +43,7 @@
             this.endpoint = new Uri(endpoint);
             this.rsaKey = rsaKey ?? throw new ArgumentNullException(nameof(rsaKey));
 
-            jws = new Jws(rsaKey, accountId);
+            jws = new Jws(rsaKey, string.Empty);
             client = restClientFactory.CreateRestClient(jws);
         }
 
@@ -127,7 +126,7 @@
                 return acmeOrder;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during order.", response, Directory.NewAccount);
+            throw new InvalidServerResponse("Invalid response from server during order.", response, Directory.NewOrder);
         }
 
         /// <summary>
@@ -289,7 +288,7 @@
         /// <returns></returns>
         /// <exception cref="Exceptions.API.UnauthorizedException">Thrown if the user isn't authorized to revoke the certificate.</exception>
         /// <exception cref="Exceptions.API.BadRevocationReasonException">Thrown if the <paramref name="revocationReason"/> isn't allowed.</exception>
-        public async Task RevokeCertificateAsync(X509Certificate2 certificate, RevocationReason revocationReason, CancellationToken cancellationToken = default)
+        public async Task RevokeCertificateAsync(X509Certificate certificate, RevocationReason revocationReason, CancellationToken cancellationToken = default)
         {
             if (certificate == null)
             {
@@ -299,7 +298,7 @@
             var revocationRequest = new CertificateRevocationRequest
             {
                 Reason = revocationReason,
-                Certificate = certificate.GetPublicKeyString()
+                Certificate = Jws.Base64UrlEncoded(certificate.GetRawCertData())
             };
 
             await client.PostAsync<string>(Directory.RevokeCertificate, revocationRequest, cancellationToken);

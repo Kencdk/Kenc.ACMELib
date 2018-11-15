@@ -1,4 +1,4 @@
-﻿namespace ACMEClient
+﻿namespace ACMEClient.Example
 {
     using System;
     using System.Collections.Generic;
@@ -46,7 +46,7 @@
 
             var rsaKey = RSA.Create(rsaCryptoServiceProvider.ExportParameters(true));
 
-            var acmeClient = new ACMEClient(ACMEEnvironment.StagingV2, rsaKey, string.Empty, new RestClientFactory());
+            var acmeClient = new ACMEClient(ACMEEnvironment.StagingV2, rsaKey, new RestClientFactory());
             var directory = await acmeClient.InitializeAsync();
 
             Account account = null;
@@ -104,6 +104,27 @@
 
             var domainTask = OrderDomains(acmeClient, domainName);
             domainTask.Wait();
+
+            // enumerate all certs
+            var certificateFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.crt").ToList();
+            Console.WriteLine($"Revoking certificates: {string.Join(',', certificateFiles)}");
+
+            var foo = HandleConsoleInput("Continue?", new[] { "y", "yes", "n", "no" }, false).ToLower();
+            if (foo == "y" || foo == "yes")
+            {
+                var certificates = certificateFiles.Select(path => X509Certificate2.CreateFromCertFile(path));
+                var revocationTasks = RevokeCertificates(acmeClient, certificates, RevocationReason.Superseded).ToArray();
+                Task.WaitAll(revocationTasks);
+                Console.WriteLine("Completed");
+            }
+        }
+
+        static IEnumerable<Task> RevokeCertificates(ACMEClient acmeClient, IEnumerable<X509Certificate> certificates, RevocationReason reason)
+        {
+            foreach (var certificate in certificates)
+            {
+                yield return acmeClient.RevokeCertificateAsync(certificate, RevocationReason.Superseded);
+            }
         }
 
         static async Task OrderDomains(ACMEClient acmeClient, params string[] domainNames)

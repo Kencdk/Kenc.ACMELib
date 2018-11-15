@@ -32,7 +32,7 @@
         public JwsMessage Encode<TPayload>(TPayload payload, JwsHeader protectedHeader)
         {
             protectedHeader.Algorithm = "RS256";
-            if (!string.IsNullOrEmpty(_jwk.KeyId))
+            if (!string.IsNullOrWhiteSpace(_jwk.KeyId))
             {
                 protectedHeader.KeyId = _jwk.KeyId;
             }
@@ -49,8 +49,8 @@
 
             message.Signature = Base64UrlEncoded(
                 _rsa.SignData(Encoding.ASCII.GetBytes(message.Protected + "." + message.Payload),
-                    HashAlgorithmName.SHA256,
-                    RSASignaturePadding.Pkcs1));
+                                HashAlgorithmName.SHA256,
+                                RSASignaturePadding.Pkcs1));
 
             return message;
         }
