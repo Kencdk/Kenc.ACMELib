@@ -59,7 +59,7 @@
         /// <returns>a <typeparamref name="TResult"/> class with the result and a string containing the result.</returns>
         public async Task<(TResult Result, string Response)> GetAsync<TResult>(Uri uri, CancellationToken token) where TResult : class
         {
-            return await SendAsync<TResult>(HttpMethod.Get, uri, null, token);
+            return await SendAsync<TResult>(HttpMethod.Get, uri, null, token).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@
         /// <returns>a <typeparamref name="TResult"/> class with the result and a string containing the result.</returns>
         public async Task<(TResult result, string response)> HeadAsync<TResult>(Uri uri, CancellationToken token) where TResult : class
         {
-            return await SendAsync<TResult>(HttpMethod.Head, uri, null, token);
+            return await SendAsync<TResult>(HttpMethod.Head, uri, null, token).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -84,7 +84,7 @@
         /// <returns>a <typeparamref name="TResult"/> class with the result and a string containing the result.</returns>
         public async Task<(TResult Result, string Response)> PostAsync<TResult>(Uri uri, object message, CancellationToken token) where TResult : class
         {
-            return await SendAsync<TResult>(HttpMethod.Post, uri, message, token);
+            return await SendAsync<TResult>(HttpMethod.Post, uri, message, token).ConfigureAwait(false);
         }
 
         private async Task<(TResult Result, string Response)> SendAsync<TResult>(HttpMethod method, Uri uri, object message, CancellationToken token) where TResult : class

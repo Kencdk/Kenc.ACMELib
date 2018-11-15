@@ -276,7 +276,7 @@
         /// <returns><see cref="ACMEDirectory"/></returns>
         public async Task<ACMEDirectory> GetDirectoryAsync(CancellationToken token = default)
         {
-            Directory = await RequestDirectoryAsync(token);
+            Directory = await RequestDirectoryAsync(token).ConfigureAwait(false);
             return Directory;
         }
 
