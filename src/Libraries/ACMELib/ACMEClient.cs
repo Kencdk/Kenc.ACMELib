@@ -140,9 +140,19 @@
             var (result, response) = await client.GetAsync<AuthorizationChallengeResponse>(uri, cancellationToken);
             if (result is AuthorizationChallengeResponse acmeOrder)
             {
-                foreach (var challenge in result.Challenges)
+                if (result.Challenges != null)
                 {
-                    challenge.AuthorizationToken = jws.GetKeyAuthorization(challenge.Token);
+                    foreach (var challenge in result.Challenges)
+                    {
+                        if (challenge.Type == "dns-01")
+                        {
+                            challenge.AuthorizationToken = jws.GetDNSKeyAuthorization(challenge.Token);
+                        }
+                        else
+                        {
+                            challenge.AuthorizationToken = jws.GetKeyAuthorization(challenge.Token);
+                        }
+                    }
                 }
 
                 return acmeOrder;
@@ -208,12 +218,28 @@
         /// <remarks>The subjectname for the request is the first identifier in <paramref name="order"/>. Subsequent identifiers are added as alternative names.</remarks>
         public async Task<Order> RequestCertificateAsync(Order order, RSACryptoServiceProvider key, CancellationToken cancellationToken = default)
         {
-            var csr = new CertificateRequest("CN=" + order.Identifiers[0].Value, key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            List<string> identifiers = null;
+            if (order.Identifiers.Length > 1 && order.Identifiers[0].Value[0] == '*')
+            {
+                // wildcards always goes first in the response from lets encrypt; reverse the order as requesting a wildcard as the subject name fails.
+                identifiers = new List<string>
+                {
+                    order.Identifiers[1].Value,
+                    order.Identifiers[0].Value
+                };
+                identifiers.AddRange(order.Identifiers.Skip(2).Select(item => item.Value));
+            }
+            else
+            {
+                identifiers = order.Identifiers.Select(item => item.Value).ToList();
+            }
+
+            var csr = new CertificateRequest("CN=" + identifiers.First(), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             var san = new SubjectAlternativeNameBuilder();
-            foreach (var identifier in order.Identifiers.Skip(1))
+            foreach (var identifier in identifiers.Skip(1))
             {
-                san.AddDnsName(identifier.Value);
+                san.AddDnsName(identifier);
             }
             csr.CertificateExtensions.Add(san.Build());
 

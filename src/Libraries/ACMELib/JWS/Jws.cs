@@ -70,6 +70,15 @@
             return token + "." + GetSha256Thumbprint();
         }
 
+        public string GetDNSKeyAuthorization(string token)
+        {
+            var json = $"{token}.{GetSha256Thumbprint()}";
+            using (var sha256 = SHA256.Create())
+            {
+                return Base64UrlEncoded(sha256.ComputeHash(Encoding.UTF8.GetBytes(json)));
+            }
+        }
+
         public static string Base64UrlEncoded(string s)
         {
             return Base64UrlEncoded(Encoding.UTF8.GetBytes(s));

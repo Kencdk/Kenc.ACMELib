@@ -93,16 +93,16 @@
                 }
             }
 
-            Console.WriteLine("Enter domain to validate and request certificate for:");
-            var domainName = Console.ReadLine();
+            Console.WriteLine("Enter domain(s) to validate and request certificate(s) for (wildcard? add wildcard and tld comma separated):");
+            var domainNames = Console.ReadLine().Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 
-            if (string.IsNullOrWhiteSpace(domainName))
+            if (!domainNames.Any())
             {
                 Console.WriteLine("Invalid domain aborting.");
                 return;
             }
 
-            var domainTask = OrderDomains(acmeClient, domainName);
+            var domainTask = OrderDomains(acmeClient, domainNames);
             domainTask.Wait();
 
             // enumerate all certs
@@ -149,8 +149,23 @@
             var auths = await RetrieveAuthz(acmeClient, validations);
             foreach (var item in auths)
             {
+                if (item.Status.ToLowerInvariant() == "valid")
+                {
+                    Console.WriteLine("Domain already validated succesfully.");
+                    continue;
+                }
+
+                var validChallenge = item.Challenges.Where(challenge => challenge.Status == "valid").FirstOrDefault();
+                if (validChallenge != null)
+                {
+                    Console.WriteLine("Found a valid challenge, skipping domain.");
+                    Console.WriteLine(validChallenge.Type);
+                    continue;
+                }
+
                 foreach (var challenge in item.Challenges)
                 {
+                    Console.WriteLine($"Status: {challenge.Status}");
                     Console.WriteLine($"Challenge: {challenge.Url}");
                     Console.WriteLine($"Type: {challenge.Type}");
                     Console.WriteLine($"Token: {challenge.Token}");
@@ -160,11 +175,11 @@
                     {
                         File.WriteAllText(challenge.Token, challenge.AuthorizationToken);
                         Console.WriteLine($"File saved as: {challenge.Token} in working directory.");
-                        Console.WriteLine($"Please upload the file to {domainNames.First()}/.well-known/acme-challenge/{challenge.Token}");
+                        Console.WriteLine($"Please upload the file to {item.Identifier.Value}/.well-known/acme-challenge/{challenge.Token}");
                     }
                     else if (challenge.Type == "dns-01")
                     {
-                        Console.WriteLine($"Please create a text entry in the DNS records for each domain in {string.Join(',', domainNames)} using {challenge.Token}");
+                        Console.WriteLine($"Please create a text entry for _acme-challenge.{item.Identifier.Value} with value: {challenge.AuthorizationToken}");
                     }
                     else
                     {
@@ -175,20 +190,26 @@
                     if (result == "y" || result == "yes")
                     {
                         Console.WriteLine("Validating challenge");
-                        var validation = await ValidateChallengeCompletion(challenge, domainNames);
-                        if (validation.Any(validationItem => !validationItem.Value))
-                        {
-                            Console.WriteLine($"The following domains failed validation: " +
-                                $"{string.Join(',', validation.Where(vItem => !vItem.Value).Select(vItem => vItem.Key))}");
-                        }
-
-                        if (validation.Any(validationItem => validationItem.Value))
+                        var validation = await ValidateChallengeCompletion(challenge, item.Identifier.Value);
+                        if (validation)
                         {
                             var c = await CompleteChallenge(acmeClient, challenge, challenge.AuthorizationToken);
-                            if (c != null)
+                            while (c.Status == "pending")
                             {
-                                Console.WriteLine(c.Status);
+                                await Task.Delay(5000);
+                                c = await acmeClient.GetAuthorizationChallengeAsync(challenge.Url);
                             }
+
+                            Console.WriteLine($"Challenge Status: {c.Status}");
+                            if (c.Status == "valid")
+                            {
+                                // no reason to keep going, we have one succesfull challenge!
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Validation failed for {item.Identifier.Value}");
                         }
                     }
                     else
@@ -198,12 +219,24 @@
                 }
             }
 
-            // todo: add a proper check to see if all validations passed.
+            foreach (var challenge in order.Authorizations)
+            {
+                AuthorizationChallengeResponse c;
+                do
+                {
+                    c = await acmeClient.GetAuthorizationChallengeAsync(challenge);
+                }
+                while (c == null || c.Status == "pending");
+
+                if (c.Status == "invalid")
+                {
+                    Console.WriteLine($"Failed to validate domain {c.Identifier}. Aborting");
+                    return;
+                }
+            }
 
             order = await acmeClient.UpdateOrderAsync(order);
             Console.WriteLine($"Order status:{order.Status}");
-
-            // todo: if(order.Status == failed...)
 
             while (order.Status == Order.Processing)
             {
@@ -213,7 +246,7 @@
             }
 
             var certKey = new RSACryptoServiceProvider(4096);
-            SaveRSAKeyToFile(certKey, $"{order.Identifiers[0].Value}.key");
+            SaveRSAKeyToFile(certKey, $"{FixFilename(order.Identifiers[0].Value)}.key");
 
             Order certOrder = null;
             try
@@ -232,11 +265,12 @@
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                return;
             }
 
             var cert = await acmeClient.GetCertificateAsync(certOrder);
             var certdata = cert.Export(X509ContentType.Cert);
-            var publicKeyFilename = $"{certOrder.Identifiers[0].Value}.crt";
+            var publicKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.crt";
             File.WriteAllBytes(publicKeyFilename, certdata);
             Console.WriteLine($"Public certificate written to file {publicKeyFilename}");
 
@@ -244,113 +278,75 @@
             var properCert = cert.CopyWithPrivateKey(certKey);
             var pfxData = cert.Export(X509ContentType.Pfx);
 
-            var privateKeyFilename = $"{certOrder.Identifiers[0].Value}.pfx";
+            var privateKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.pfx";
             File.WriteAllBytes(privateKeyFilename, pfxData);
             Console.WriteLine($"Private certificate written to file {privateKeyFilename}");
         }
 
-        static async Task<Dictionary<string, bool>> ValidateChallengeCompletion(AuthorizationChallenge challenge, IEnumerable<string> domainNames)
+        static string FixFilename(string filename)
+        {
+            return filename.Replace("*", "");
+        }
+
+        static async Task<bool> ValidateChallengeCompletion(AuthorizationChallenge challenge, string domainName)
         {
             if (challenge.Type == "http-01")
             {
-                return await ValidateHttpChallenge(challenge.Token, challenge.AuthorizationToken, domainNames);
+                return await ValidateHttpChallenge(challenge.Token, challenge.AuthorizationToken, domainName);
 
             }
             else if (challenge.Type == "dns-01")
             {
-                Console.WriteLine($"Please create a text entry in the DNS records for each domain in {string.Join(',', domainNames)} using {challenge.Token}");
-                return domainNames.ToDictionary(domain => domain, domain => false);
+                // can't validate, return success.
+                Console.WriteLine($"Please validate a text entry exists for _acme-challenge.{domainName} with value {challenge.AuthorizationToken}");
+                return true;
             }
             else
             {
-                Console.WriteLine($"Unknown challenge type encountered '{challenge.Type}'. Please validate yourself.");
                 // can't validate, return success.
-                return domainNames.ToDictionary(domain => domain, domain => true);
+                Console.WriteLine($"Unknown challenge type encountered '{challenge.Type}'. Please validate yourself.");
+                return true;
             }
         }
 
-        static async Task<Dictionary<string, bool>> ValidateChallenges(IEnumerable<AuthorizationChallengeResponse> challenges, IEnumerable<string> domains)
+        static async Task<bool> ValidateHttpChallenge(string token, string expectedValue, string domain)
         {
-            var challengeValidation = domains.ToDictionary(domain => domain, domain => false);
-            //validate challenges
-            Console.WriteLine("Validating challenge completion");
-            foreach (var item in challenges)
+            var domainUrl = domain.Replace("*", "");
+            var url = $"http://{domainUrl}/.well-known/acme-challenge/{token}";
+            var httpRequest = (HttpWebRequest)HttpWebRequest.Create(url);
+            try
             {
-                foreach (var challenge in item.Challenges)
+                var response = (HttpWebResponse)(await httpRequest.GetResponseAsync());
+                if (response.StatusCode != HttpStatusCode.OK)
                 {
+                    Console.WriteLine($"{url} Received unexpected status code: {response.StatusCode}");
+                    return false;
+                }
 
-                    if (challenge.Type == "http-01")
+                using (var stream = response.GetResponseStream())
+                {
+                    using (var streamReader = new StreamReader(stream))
                     {
-                        // do a get request against url of each domain
-                        var validationResults = await ValidateHttpChallenge(challenge.Token, challenge.AuthorizationToken, domains);
-                        foreach (var domainResult in validationResults)
+                        var received = streamReader.ReadToEnd();
+                        if (string.Compare(received, expectedValue, StringComparison.Ordinal) != 0)
                         {
-                            if (domainResult.Value)
-                            {
-                                // update all successfull validations
-                                challengeValidation[domainResult.Key] = domainResult.Value;
-                            }
+                            Console.WriteLine($"{url} responded with unexpected value.");
+                            Console.WriteLine(received);
+                            Console.WriteLine(expectedValue);
+                            return false;
                         }
-
-                        if (validationResults.Any(domainResult => !domainResult.Value))
+                        else
                         {
-                            Console.WriteLine("Failed to succesfully validate all domains.");
+                            return true;
                         }
-
-                        Console.WriteLine($"Succesfully validated all domains fo challenge {challenge.Url}");
-                    }
-                    else if (challenge.Type == "dns-01")
-                    {
-                        // validate 
                     }
                 }
             }
-
-            return challengeValidation;
-        }
-
-        static async Task<Dictionary<string, bool>> ValidateHttpChallenge(string token, string expectedValue, IEnumerable<string> domains)
-        {
-            var result = domains.ToDictionary(item => item, item => false);
-            foreach (var domain in domains)
+            catch (Exception ex)
             {
-                // use https?
-                var url = $"http://{domain}/.well-known/acme-challenge/{token}";
-                var httpRequest = (HttpWebRequest)HttpWebRequest.Create(url);
-                try
-                {
-                    var response = (HttpWebResponse)(await httpRequest.GetResponseAsync());
-                    if (response.StatusCode != HttpStatusCode.OK)
-                    {
-                        Console.WriteLine($"{url} Received unexpected status code: {response.StatusCode}");
-                        continue;
-                    }
-
-                    using (var stream = response.GetResponseStream())
-                    {
-                        using (var streamReader = new StreamReader(stream))
-                        {
-                            var received = streamReader.ReadToEnd();
-                            if (string.Compare(received, expectedValue, StringComparison.Ordinal) != 0)
-                            {
-                                Console.WriteLine($"{url} responded with unexpected value.");
-                                Console.WriteLine(received);
-                                Console.WriteLine(expectedValue);
-                            }
-                            else
-                            {
-                                result[domain] = true;
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"{url} Failed: {ex.Message}");
-
-                }
+                Console.WriteLine($"{url} Failed: {ex.Message}");
+                return false;
             }
-            return result;
         }
 
         static string HandleConsoleInput(string prompt, string[] acceptedResponses, bool caseSensitive = false)
