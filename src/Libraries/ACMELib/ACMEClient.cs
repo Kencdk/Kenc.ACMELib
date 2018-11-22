@@ -84,6 +84,11 @@
             throw new InvalidServerResponse("Invalid response from server during registration.", response, Directory.NewAccount);
         }
 
+        /// <summary>
+        /// Get an existing account record using the encryption key specified in constructor.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token for the async request.</param>
+        /// <returns>A <see cref="Account"/> record if one exists.</returns>
         public async Task<Account> GetAccountAsync(CancellationToken cancellationToken = default)
         {
             if (Directory == null)
