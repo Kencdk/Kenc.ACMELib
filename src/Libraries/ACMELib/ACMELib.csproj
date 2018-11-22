@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks>netcoreapp2.0;netcoreapp2.1</TargetFrameworks>
     <AssemblyName>Kenc.ACMELib</AssemblyName>
     <RootNamespace>Kenc.ACMELib</RootNamespace>
 
@@ -22,6 +22,12 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <PackageProjectUrl>https://github.com/Kencdk/Kenc.ACMELib</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Kencdk/Kenc.ACMELib</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageTags>ACME LetsEncrypt Certificate</PackageTags>
+    <Copyright>2018 Ken Christensen</Copyright>
+    <Description>.net core library for communicating with Let’s Encrypt ACME servers for certificate management.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\..\..\LICENSE" Link="LICENSE">
