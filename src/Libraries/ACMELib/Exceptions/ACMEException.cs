@@ -48,6 +48,10 @@
                     Descriptor = ((ACMEExceptionAttribute)acmeAttributes[0]).Descriptor;
                 }
             }
+            else
+            {
+                Descriptor = descriptor;
+            }
         }
     }
 }

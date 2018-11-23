@@ -27,7 +27,7 @@ namespace ACMELibCore.Test.RequestMethodTests
             await acmeClient.RevokeCertificateAsync(testCertificate, RevocationReason.PriviledgeWithdrawn);
 
             restClient.Verify(rc => rc.PostAsync<string>(TestHelpers.acmeDirectory.RevokeCertificate,
-                It.Is<CertificateRevocationRequest>(req => req.Certificate == testCertificate.GetPublicKeyString() && req.Reason == RevocationReason.PriviledgeWithdrawn),
+                It.Is<CertificateRevocationRequest>(req => req.Reason == RevocationReason.PriviledgeWithdrawn),
                 It.IsAny<CancellationToken>()), Times.Once, "Rest Client wasn't called with expected parameters.");
         }
 

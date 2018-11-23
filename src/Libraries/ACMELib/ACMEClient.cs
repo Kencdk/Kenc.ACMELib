@@ -250,7 +250,7 @@
 
             var message = new FinalizeRequest
             {
-                CSR = Jws.Base64UrlEncoded(csr.CreateSigningRequest())
+                CSR = Utilities.Base64UrlEncoded(csr.CreateSigningRequest())
             };
 
             var (result, responseText) = await client.PostAsync<Order>(order.Finalize, message, cancellationToken);
@@ -329,7 +329,7 @@
             var revocationRequest = new CertificateRevocationRequest
             {
                 Reason = revocationReason,
-                Certificate = Jws.Base64UrlEncoded(certificate.GetRawCertData())
+                Certificate = Utilities.Base64UrlEncoded(certificate.GetRawCertData())
             };
 
             await client.PostAsync<string>(Directory.RevokeCertificate, revocationRequest, cancellationToken);
