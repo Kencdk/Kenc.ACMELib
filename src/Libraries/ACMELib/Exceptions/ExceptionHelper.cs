@@ -52,7 +52,7 @@
                 throw (ACMEException)Activator.CreateInstance(typeWhereAttributeMatches, new object[] { problem.Status, problem.Detail });
             }
 
-            throw new ACMEException(problem.Status, problem.Detail);
+            throw new ACMEException(problem.Status, problem.Detail, problem.Type);
         }
     }
 }

@@ -113,17 +113,24 @@
             if (foo == "y" || foo == "yes")
             {
                 var certificates = certificateFiles.Select(path => X509Certificate2.CreateFromCertFile(path));
-                var revocationTasks = RevokeCertificates(acmeClient, certificates, RevocationReason.Superseded).ToArray();
-                Task.WaitAll(revocationTasks);
+                foreach (var certificate in certificates)
+                {
+                    try
+                    {
+                        await acmeClient.RevokeCertificateAsync(certificate, RevocationReason.Superseded);
+                        Console.WriteLine($"{certificate.Subject} revoked.");
+                    }
+                    catch (ACMEException exception) when (exception.Descriptor == "urn:ietf:params:acme:error:alreadyRevoked")
+                    {
+                        Console.WriteLine(exception.Message);
+                    }
+                    catch (ACMEException exception)
+                    {
+                        Console.WriteLine(exception.Message);
+                        throw exception;
+                    }
+                }
                 Console.WriteLine("Completed");
-            }
-        }
-
-        static IEnumerable<Task> RevokeCertificates(ACMEClient acmeClient, IEnumerable<X509Certificate> certificates, RevocationReason reason)
-        {
-            foreach (var certificate in certificates)
-            {
-                yield return acmeClient.RevokeCertificateAsync(certificate, RevocationReason.Superseded);
             }
         }
 
