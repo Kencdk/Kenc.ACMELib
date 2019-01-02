@@ -237,7 +237,7 @@
 
                 if (c.Status == "invalid")
                 {
-                    Console.WriteLine($"Failed to validate domain {c.Identifier}. Aborting");
+                    Console.WriteLine($"Failed to validate domain {c.Identifier.Value}. Aborting");
                     return;
                 }
             }
@@ -283,7 +283,7 @@
 
             // combine the two!
             var properCert = cert.CopyWithPrivateKey(certKey);
-            var pfxData = cert.Export(X509ContentType.Pfx);
+            var pfxData = properCert.Export(X509ContentType.Pfx);
 
             var privateKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.pfx";
             File.WriteAllBytes(privateKeyFilename, pfxData);
