@@ -34,14 +34,14 @@ namespace ACMELibCore.Test.RequestMethodTests
                 Challenges = new[] {
                     new AuthorizationChallenge
                     {
-                        Status = "pending",
+                        Status = ACMEStatus.Pending,
                         Url = authorizationUrl,
                         Type = "dns-01",
                         Token = dnstoken
                     },
                     new AuthorizationChallenge
                     {
-                        Status = "pending",
+                        Status = ACMEStatus.Pending,
                         Token = token,
                         Type = "http-01",
                         Url = authorizationUrl

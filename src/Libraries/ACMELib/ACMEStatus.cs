@@ -10,6 +10,7 @@
         Processing,
         Valid,
         Invalid,
-        Revoked
+        Revoked,
+        Ready
     }
 }

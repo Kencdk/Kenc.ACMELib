@@ -4,6 +4,7 @@
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.JWS;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Describes an account in the ACME protocol.
@@ -17,7 +18,8 @@
         public string[] Contacts { get; set; }
 
         [JsonProperty("status")]
-        public string Status { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ACMEStatus Status { get; set; }
 
         [JsonProperty("id")]
         public string Id { get; set; }

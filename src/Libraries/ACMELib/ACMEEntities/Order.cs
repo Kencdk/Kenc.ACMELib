@@ -3,6 +3,7 @@
     using System;
     using Kenc.ACMELib.ACMEResponses;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Describes an order in the ACME protocol.
@@ -10,16 +11,11 @@
     public class Order : ILocationResponse
     {
         [JsonIgnore]
-        public static string Processing = "processing";
-
-        [JsonIgnore]
-        public static string Valid = "valid";
-
-        [JsonIgnore]
         public Uri Location { get; set; }
 
         [JsonProperty("status")]
-        public string Status { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ACMEStatus Status { get; set; }
 
         [JsonProperty("expires")]
         public DateTime? Expires { get; set; }

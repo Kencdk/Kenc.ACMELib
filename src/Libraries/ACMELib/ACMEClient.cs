@@ -288,7 +288,7 @@
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="order"/>.Status isn't <see cref="Order.Valid"/></exception>
         public async Task<X509Certificate2> GetCertificateAsync(Order order, CancellationToken cancellationToken = default)
         {
-            if (order.Status != Order.Valid)
+            if (order.Status != ACMEStatus.Valid)
             {
                 var exception = new ArgumentOutOfRangeException(nameof(order.Status), "Order status is not in valid range.");
                 throw exception;

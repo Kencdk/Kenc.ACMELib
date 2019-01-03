@@ -2,6 +2,7 @@
 {
     using System;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Describes an authorization challenge in the ACME protocol.
@@ -12,7 +13,8 @@
         public string Type { get; set; }
 
         [JsonProperty("status")]
-        public string Status { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ACMEStatus Status { get; set; }
 
         [JsonProperty("url")]
         public Uri Url { get; set; }

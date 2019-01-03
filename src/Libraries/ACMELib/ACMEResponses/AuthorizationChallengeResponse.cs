@@ -3,6 +3,7 @@
     using System;
     using Kenc.ACMELib.ACMEEntities;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Describes an authorization challenge response in the ACME protocol.
@@ -13,7 +14,8 @@
         public OrderIdentifier Identifier { get; set; }
 
         [JsonProperty("status")]
-        public string Status { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ACMEStatus Status { get; set; }
 
         [JsonProperty("expires")]
         public DateTime? Expires { get; set; }
