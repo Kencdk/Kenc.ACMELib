@@ -156,13 +156,13 @@
             var auths = await RetrieveAuthz(acmeClient, validations);
             foreach (var item in auths)
             {
-                if (item.Status.ToLowerInvariant() == "valid")
+                if (item.Status == ACMEStatus.Valid)
                 {
                     Console.WriteLine("Domain already validated succesfully.");
                     continue;
                 }
 
-                var validChallenge = item.Challenges.Where(challenge => challenge.Status == "valid").FirstOrDefault();
+                var validChallenge = item.Challenges.Where(challenge => challenge.Status == ACMEStatus.Valid).FirstOrDefault();
                 if (validChallenge != null)
                 {
                     Console.WriteLine("Found a valid challenge, skipping domain.");
@@ -201,14 +201,14 @@
                         if (validation)
                         {
                             var c = await CompleteChallenge(acmeClient, challenge, challenge.AuthorizationToken);
-                            while (c.Status == "pending")
+                            while (c.Status == ACMEStatus.Pending)
                             {
                                 await Task.Delay(5000);
                                 c = await acmeClient.GetAuthorizationChallengeAsync(challenge.Url);
                             }
 
                             Console.WriteLine($"Challenge Status: {c.Status}");
-                            if (c.Status == "valid")
+                            if (c.Status == ACMEStatus.Valid)
                             {
                                 // no reason to keep going, we have one succesfull challenge!
                                 break;
@@ -233,9 +233,9 @@
                 {
                     c = await acmeClient.GetAuthorizationChallengeAsync(challenge);
                 }
-                while (c == null || c.Status == "pending");
+                while (c == null || c.Status == ACMEStatus.Pending);
 
-                if (c.Status == "invalid")
+                if (c.Status == ACMEStatus.Invalid)
                 {
                     Console.WriteLine($"Failed to validate domain {c.Identifier.Value}. Aborting");
                     return;
@@ -245,7 +245,7 @@
             order = await acmeClient.UpdateOrderAsync(order);
             Console.WriteLine($"Order status:{order.Status}");
 
-            while (order.Status == Order.Processing)
+            while (order.Status == ACMEStatus.Processing)
             {
                 Thread.Sleep(500);
                 Console.WriteLine("Order status = processing; updating..");
@@ -260,7 +260,7 @@
             {
 
                 certOrder = await acmeClient.RequestCertificateAsync(order, certKey);
-                while (certOrder.Status == Order.Processing)
+                while (certOrder.Status == ACMEStatus.Processing)
                 {
                     Thread.Sleep(500);
                     Console.WriteLine("Order status = processing; updating..");
