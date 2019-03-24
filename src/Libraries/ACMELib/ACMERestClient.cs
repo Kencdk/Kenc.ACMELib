@@ -103,7 +103,7 @@
                 var json = JsonConvert.SerializeObject(encodedMessage, JsonSettings);
 
                 var stream = await request.GetRequestStreamAsync();
-                var encoded = UTF8Encoding.UTF8.GetBytes(json);
+                var encoded = Encoding.UTF8.GetBytes(json);
                 stream.Write(encoded, 0, encoded.Length);
                 stream.Close();
                 request.ContentLength = encoded.Length;

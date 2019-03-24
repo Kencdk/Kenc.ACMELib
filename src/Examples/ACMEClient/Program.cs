@@ -170,7 +170,10 @@
                     continue;
                 }
 
-                foreach (var challenge in item.Challenges)
+                var applicableChallenges = item.Wildcard ? item.Challenges.Where(x => x.Type == "dns-01") :
+                    item.Challenges;
+
+                foreach (var challenge in applicableChallenges)
                 {
                     Console.WriteLine($"Status: {challenge.Status}");
                     Console.WriteLine($"Challenge: {challenge.Url}");
