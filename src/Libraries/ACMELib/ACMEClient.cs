@@ -223,20 +223,11 @@
         /// <remarks>The subjectname for the request is the first identifier in <paramref name="order"/>. Subsequent identifiers are added as alternative names.</remarks>
         public async Task<Order> RequestCertificateAsync(Order order, RSACryptoServiceProvider key, CancellationToken cancellationToken = default)
         {
-            List<string> identifiers = null;
-            if (order.Identifiers.Length > 1 && order.Identifiers[0].Value[0] == '*')
+            var identifiers = order.Identifiers.Select(item => item.Value).ToList();
+            if (identifiers.Any(x => x[0] == '*'))
             {
-                // wildcards always goes first in the response from lets encrypt; reverse the order as requesting a wildcard as the subject name fails.
-                identifiers = new List<string>
-                {
-                    order.Identifiers[1].Value,
-                    order.Identifiers[0].Value
-                };
-                identifiers.AddRange(order.Identifiers.Skip(2).Select(item => item.Value));
-            }
-            else
-            {
-                identifiers = order.Identifiers.Select(item => item.Value).ToList();
+                // ensure wildcards are at the end.
+                identifiers.Reverse();
             }
 
             var csr = new CertificateRequest("CN=" + identifiers.First(), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
