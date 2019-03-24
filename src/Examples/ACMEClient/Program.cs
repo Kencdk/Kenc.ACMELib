@@ -286,7 +286,10 @@
 
             // combine the two!
             var properCert = cert.CopyWithPrivateKey(certKey);
-            var pfxData = properCert.Export(X509ContentType.Pfx);
+
+            Console.WriteLine("Enter password to secure PFX");
+            var password = PasswordInput.ReadPassword();
+            var pfxData = properCert.Export(X509ContentType.Pfx, password);
 
             var privateKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.pfx";
             File.WriteAllBytes(privateKeyFilename, pfxData);
