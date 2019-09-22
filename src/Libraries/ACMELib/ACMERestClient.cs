@@ -111,7 +111,7 @@
 
             request.Headers[HttpRequestHeader.UserAgent] = UserAgent;
             request.Headers[HttpRequestHeader.ContentType] = ApplicationJoseAndJson;
-            WebResponse response = null;
+            WebResponse response;
             try
             {
                 response = (HttpWebResponse)await request.GetResponseAsync();
