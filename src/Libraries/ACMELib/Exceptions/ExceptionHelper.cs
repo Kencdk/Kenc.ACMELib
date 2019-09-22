@@ -11,7 +11,7 @@
     /// </summary>
     public static class ExceptionHelper
     {
-        private static List<Type> KnownExceptions = new List<Type>
+        private static readonly List<Type> KnownExceptions = new List<Type>
         {
             typeof(AccountDoesNotExistException),
             typeof(BadCSRException),
@@ -32,7 +32,9 @@
             typeof(UnauthorizedException),
             typeof(UnsupportedContactException),
             typeof(UnsupportedIdentifierException),
-            typeof(UserActionRequiredException)
+            typeof(UserActionRequiredException),
+            typeof(BadPublicKeyException),
+            typeof(OrderNotReadyException)
         };
 
         /// <summary>
