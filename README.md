@@ -8,7 +8,7 @@ Free and open source software [ACME protocol v2](https://tools.ietf.org/html/rfc
 
 ## Contributing
 
-* Read the [Contributing](https://github.com/Kencdk/Kenc.ACMELib/blob/master/.github/contributing.md) document.
+* Read the [Contributing](https://github.com/Kencdk/Kenc.ACMELib/blob/master/.github/Contributing.md) document.
 
 ## Getting Started
 
