@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2002
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{C9A9AB54-D122-48CC-9CA7-F34BC5DB3293}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACMEClient", "Examples\ACMEClient\ACMEClient.csproj", "{BD4872DB-73DF-497D-915D-C20EB4283167}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACMELib", "Libraries\ACMELib\ACMELib.csproj", "{1008A2AB-B3BD-4C83-970C-DEEF51E90668}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kenc.ACMELib", "Libraries\ACMELib\Kenc.ACMELib.csproj", "{1008A2AB-B3BD-4C83-970C-DEEF51E90668}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACMELibCore.Tests", "Libraries\ACMELib.Tests\ACMELibCore.Tests.csproj", "{180FB53E-F43A-454E-9B4D-3653B8B0170E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kenc.ACMELibCore.Tests", "Libraries\ACMELib.Tests\Kenc.ACMELibCore.Tests.csproj", "{180FB53E-F43A-454E-9B4D-3653B8B0170E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

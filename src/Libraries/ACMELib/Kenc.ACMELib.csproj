@@ -1,33 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0;netcoreapp2.1</TargetFrameworks>
-    <AssemblyName>Kenc.ACMELib</AssemblyName>
-    <RootNamespace>Kenc.ACMELib</RootNamespace>
-
-    <LangVersion>7.3</LangVersion>
-  </PropertyGroup>
-
-  <!-- nuget package properties -->
+  </PropertyGroup>  
   <PropertyGroup>
+    <Description>.net core library for communicating with Let’s Encrypt ACME servers for certificate management.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Ken Christensen</Authors>
-    <Company>Ken Christensen</Company>
+    
+    <!-- nuget package properties -->
     <PackageId>Kenc.ACMELib</PackageId>
-    <Product>Kenc.ACMELib</Product>
+    <PackageId>Kenc.ACMELib</PackageId>
+    <PackageTags>ACME LetsEncrypt Certificate</PackageTags>
     <PackageDescription>ACME v2 compliant client implementation</PackageDescription>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Kencdk/Kenc.ACMELib/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 
     <!-- source link properties -->
+    <RepositoryType>Github</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PackageProjectUrl>https://github.com/Kencdk/Kenc.ACMELib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Kencdk/Kenc.ACMELib</RepositoryUrl>
-    <RepositoryType>Github</RepositoryType>
-    <PackageTags>ACME LetsEncrypt Certificate</PackageTags>
-    <Copyright>2018 Ken Christensen</Copyright>
-    <Description>.net core library for communicating with Let’s Encrypt ACME servers for certificate management.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\..\..\LICENSE" Link="LICENSE">
@@ -35,7 +28,6 @@
       <PackagePath>\</PackagePath>
     </Content>
   </ItemGroup>
-  
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />

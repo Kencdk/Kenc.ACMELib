@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ACMELib\ACMELib.csproj" />
+    <ProjectReference Include="..\ACMELib\Kenc.ACMELib.csproj" />
   </ItemGroup>
 
 </Project>
