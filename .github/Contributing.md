@@ -26,7 +26,7 @@ The following is a set of guidelines for contributing to Kenc.ACMELib and its ex
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [kenc@kenc.dk](mailto:kenc@kenc.dk).
+This project and everyone participating in it is governed by the [Code of Conduct](https://github.com/Kencdk/Kenc.ACMELib/blob/master/.github/Code_of_Conduct.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [kenc@kenc.dk](mailto:kenc@kenc.dk).
 
 ## I don't want to read this whole thing I just have a question!!!
 
