@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!--
+    ********
+    WARNING: These targets support multiple frameworks.  Do not update the TargetFramework or any 
+             other framework specific items here as they will break the build.
+    ********
+    -->
+  <PropertyGroup>  
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <!-- include Ken Christensen in all assemblies -->
+  <PropertyGroup>
+    <Company>Ken Christensen</Company>
+    <Product>Kenc.ACMELib</Product>
+    <Authors>Ken Christensen</Authors>
+    <Copyright>© 2019 Ken Christensen. All rights reserved.</Copyright>
+  </PropertyGroup>
+
+  <!-- Saving some paths that are used elsewhere in MSBuild settings and targets -->
+  <PropertyGroup>
+    <OutputSubdir Condition=" '$(OutputSubDir)' == ''">$(MSBuildProjectName)</OutputSubdir>
+
+    <EnlistmentRoot>$(MSBuildThisFileDirectory)</EnlistmentRoot>
+    <EnlistmentRoot Condition="!HasTrailingSlash('$(EnlistmentRoot)')">$(EnlistmentRoot)\</EnlistmentRoot>
+    <MSBuildOverrides>$(MSBuildToolsPath)</MSBuildOverrides>
+    
+    <!-- setup intermediate folder to be root\Intermedia\ with unique subfolder paths -->
+    <IntermediateRootPath>$(EnlistmentRoot)Intermediates</IntermediateRootPath>
+    <IntermediateOutputPath>$(IntermediateRootPath)\$(Configuration)\$(Platform)\$(OutputSubdir)</IntermediateOutputPath>
+
+    <OutputRootPath>$(EnlistmentRoot)Drops</OutputRootPath>
+    <OutputPath>$(OutputRootPath)\$(Configuration)\$(Platform)\$(OutputSubdir)</OutputPath>
+
+    <!-- Add generated xml documentation files to packaged project output -->
+    <ExcludeXmlAssemblyFiles>false</ExcludeXmlAssemblyFiles>
+  </PropertyGroup>
+</Project>
