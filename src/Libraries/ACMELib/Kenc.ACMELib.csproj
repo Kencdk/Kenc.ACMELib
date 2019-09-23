@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;netcoreapp2.1;netcoreapp3.0</TargetFrameworks>
   </PropertyGroup>  
   <PropertyGroup>
     <Description>.net core library for communicating with Let’s Encrypt ACME servers for certificate management.</Description>
