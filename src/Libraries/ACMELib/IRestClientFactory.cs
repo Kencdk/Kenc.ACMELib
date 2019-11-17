@@ -1,6 +1,6 @@
 ﻿namespace Kenc.ACMELib
 {
-    using Kenc.ACMELib.JWS;
+    using Kenc.ACMELib.JsonWebSignature;
 
     /// <summary>
     /// Interface for a factory to create a <see cref="IRestClient"/>.

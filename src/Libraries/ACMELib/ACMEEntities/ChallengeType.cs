@@ -5,8 +5,8 @@
     /// </summary>
     public static class ChallengeType
     {
-        public static string DNSChallenge = "dns";
-        public static string HttpChallenge = "http";
-        public static string TLSSNIChallenge = "tls-sni";
+        public static readonly string DNSChallenge = "dns";
+        public static readonly string HttpChallenge = "http";
+        public static readonly string TLSSNIChallenge = "tls-sni";
     }
 }

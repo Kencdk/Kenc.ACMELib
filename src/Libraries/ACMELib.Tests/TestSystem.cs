@@ -6,7 +6,7 @@
     using System.Threading.Tasks;
     using Kenc.ACMELib;
     using Kenc.ACMELib.ACMEResponses;
-    using Kenc.ACMELib.JWS;
+    using Kenc.ACMELib.JsonWebSignature;
     using Moq;
 
     class TestSystem

@@ -1,4 +1,4 @@
-﻿namespace Kenc.ACMELib.JWS
+﻿namespace Kenc.ACMELib.JsonWebSignature
 {
     using System;
     using System.Security.Cryptography;
@@ -31,6 +31,11 @@
 
         public JwsMessage Encode<TPayload>(TPayload payload, JwsHeader protectedHeader)
         {
+            if (protectedHeader == null)
+            {
+                throw new ArgumentNullException(nameof(protectedHeader));
+            }
+
             protectedHeader.Algorithm = "RS256";
             if (!string.IsNullOrWhiteSpace(jwk.KeyId))
             {
@@ -57,12 +62,12 @@
 
         public string GetKeyAuthorization(string token)
         {
-            return token + "." + Utilities.GetSha256Thumbprint(jwk);
+            return token + "." + jwk.GetSha256Thumbprint();
         }
 
         public string GetDNSKeyAuthorization(string token)
         {
-            var json = $"{token}.{Utilities.GetSha256Thumbprint(jwk)}";
+            var json = $"{token}.{jwk.GetSha256Thumbprint()}";
             using (var sha256 = SHA256.Create())
             {
                 return Utilities.Base64UrlEncoded(sha256.ComputeHash(Encoding.UTF8.GetBytes(json)));

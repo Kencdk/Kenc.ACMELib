@@ -43,6 +43,11 @@
         /// <param name="problem">Problem from the ACME protocol.</param>
         public static void ThrowException(Problem problem)
         {
+            if (problem == null)
+            {
+                throw new ArgumentNullException(nameof(problem));
+            }
+
             var typeWhereAttributeMatches = KnownExceptions.Where(ke =>
             {
                 var attribute = ke.CustomAttributes.FirstOrDefault(ca => ca.AttributeType.IsEquivalentTo(typeof(ACMEExceptionAttribute)));

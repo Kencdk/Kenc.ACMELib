@@ -2,7 +2,7 @@
 {
     using System;
     using Kenc.ACMELib.ACMEResponses;
-    using Kenc.ACMELib.JWS;
+    using Kenc.ACMELib.JsonWebSignature;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
 

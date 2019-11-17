@@ -34,7 +34,7 @@ namespace ACMELibCore.Test.RequestMethodTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidServerResponse))]
+        [ExpectedException(typeof(InvalidServerResponseException))]
         public async Task ValidateRegisterAsyncThrowsInvalidServerResponseForBadResponse()
         {
             var testSystem = new TestSystem().WithDirectoryResponse();

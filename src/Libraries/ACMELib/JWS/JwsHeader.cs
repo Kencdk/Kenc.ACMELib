@@ -1,4 +1,4 @@
-﻿namespace Kenc.ACMELib.JWS
+﻿namespace Kenc.ACMELib.JsonWebSignature
 {
     using System;
     using Newtonsoft.Json;

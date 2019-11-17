@@ -3,7 +3,7 @@
     using System;
     using System.Security.Cryptography;
     using System.Text;
-    using Kenc.ACMELib.JWS;
+    using Kenc.ACMELib.JsonWebSignature;
 
     public static class Utilities
     {
@@ -20,8 +20,13 @@
                 .Replace('/', '_'); // convert / to _
         }
 
-        public static string GetSha256Thumbprint(Jwk jwk)
+        public static string GetSha256Thumbprint(this Jwk jwk)
         {
+            if (jwk == null)
+            {
+                throw new ArgumentNullException(nameof(jwk));
+            }
+
             var json = "{\"e\":\"" + jwk.Exponent + "\",\"kty\":\"RSA\",\"n\":\"" + jwk.Modulus + "\"}";
 
             using (var sha256 = SHA256.Create())
