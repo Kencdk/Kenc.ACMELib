@@ -7,7 +7,7 @@ namespace ACMELibCore.Test.RequestMethodTests
     using System.Threading.Tasks;
     using Kenc.ACMELib;
     using Kenc.ACMELib.ACMEResponses;
-    using Kenc.ACMELib.JWS;
+    using Kenc.ACMELib.JsonWebSignature;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
 

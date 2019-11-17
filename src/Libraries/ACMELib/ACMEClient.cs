@@ -11,7 +11,7 @@
     using Kenc.ACMELib.ACMEEntities;
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.Exceptions;
-    using Kenc.ACMELib.JWS;
+    using Kenc.ACMELib.JsonWebSignature;
 
     /// <summary>
     /// Implementation of an ACME client.
@@ -19,12 +19,12 @@
     /// </summary>
     public class ACMEClient : IACMEClient
     {
-        private Jws jws;
+        private readonly Jws jws;
         private readonly RSA rsaKey;
         private readonly Uri endpoint;
-        public ACMEDirectory Directory;
 
-        private string nonce;
+        public ACMEDirectory Directory { get; private set; }
+
         private readonly IRestClient client;
 
         /// <summary>
@@ -35,9 +35,14 @@
         /// <param name="restClientFactory">An instance of a <see cref="IRESTClient"/> for API requests.</param>
         public ACMEClient(string endpoint, RSA rsaKey, IRestClientFactory restClientFactory)
         {
-            if (endpoint == null)
+            if (string.IsNullOrEmpty(endpoint))
             {
                 throw new ArgumentNullException(nameof(endpoint));
+            }
+
+            if (restClientFactory == null)
+            {
+                throw new ArgumentNullException(nameof(restClientFactory));
             }
 
             this.endpoint = new Uri(endpoint);
@@ -49,8 +54,10 @@
 
         public async Task<ACMEDirectory> InitializeAsync()
         {
-            await GetDirectoryAsync();
-            await NewNonceAsync();
+            await GetDirectoryAsync()
+                .ConfigureAwait(false);
+            await NewNonceAsync()
+                .ConfigureAwait(false);
             return Directory;
         }
 
@@ -61,12 +68,13 @@
         /// <param name="cancellationToken">Cancellation token for the async call.</param>
         /// <returns><see cref="Account"/></returns>
         /// <exception cref="ACMEException">Thrown for all errors from ACME servers.</exception>
-        /// <exception cref="InvalidServerResponse">Thrown when the response from the server wasn't expected.</exception>
+        /// <exception cref="InvalidServerResponseException">Thrown when the response from the server wasn't expected.</exception>
         public async Task<Account> RegisterAsync(string[] contacts, CancellationToken cancellationToken = default)
         {
             if (Directory == null)
             {
-                await GetDirectoryAsync();
+                await GetDirectoryAsync()
+                    .ConfigureAwait(false);
             }
 
             var message = new Account
@@ -75,13 +83,14 @@
                 Contacts = contacts,
             };
 
-            var (result, response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken);
+            var (result, response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken)
+                .ConfigureAwait(false);
             if (result is Account acmeAccount)
             {
                 return acmeAccount;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during registration.", response, Directory.NewAccount);
+            throw new InvalidServerResponseException("registration.", response, Directory.NewAccount);
         }
 
         /// <summary>
@@ -93,7 +102,8 @@
         {
             if (Directory == null)
             {
-                await GetDirectoryAsync();
+                await GetDirectoryAsync()
+                    .ConfigureAwait(false);
             }
 
             var message = new Account
@@ -101,13 +111,14 @@
                 OnlyReturnExisting = true
             };
 
-            var (result, response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken);
+            var (result, response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken)
+                .ConfigureAwait(false);
             if (result is Account acmeAccount)
             {
                 return acmeAccount;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during account retrieval.", response, Directory.NewAccount);
+            throw new InvalidServerResponseException("account retrieval.", response, Directory.NewAccount);
         }
 
         /// <summary>
@@ -118,20 +129,20 @@
         /// <returns>An <see cref="Order"/> object with details for the requested identifiers.</returns>
         public async Task<Order> OrderAsync(IEnumerable<OrderIdentifier> identifiers, CancellationToken cancellationToken = default)
         {
-
             var message = new Order
             {
                 Expires = DateTime.UtcNow.AddDays(2),
                 Identifiers = identifiers.ToArray()
             };
 
-            var (result, response) = await client.PostAsync<Order>(Directory.NewOrder, message, cancellationToken);
+            var (result, response) = await client.PostAsync<Order>(Directory.NewOrder, message, cancellationToken)
+                .ConfigureAwait(false);
             if (result is Order acmeOrder)
             {
                 return acmeOrder;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during order.", response, Directory.NewOrder);
+            throw new InvalidServerResponseException("order.", response, Directory.NewOrder);
         }
 
         /// <summary>
@@ -142,7 +153,8 @@
         /// <returns><see cref="AuthorizationChallengeResponse"/></returns>
         public async Task<AuthorizationChallengeResponse> GetAuthorizationChallengeAsync(Uri uri, CancellationToken cancellationToken = default)
         {
-            var (result, response) = await client.GetAsync<AuthorizationChallengeResponse>(uri, cancellationToken);
+            var (result, response) = await client.GetAsync<AuthorizationChallengeResponse>(uri, cancellationToken)
+                .ConfigureAwait(false);
             if (result is AuthorizationChallengeResponse acmeOrder)
             {
                 if (result.Challenges != null)
@@ -163,7 +175,7 @@
                 return acmeOrder;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during GetAuthorizationChallenge.", response, Directory.NewAccount);
+            throw new InvalidServerResponseException("GetAuthorizationChallenge.", response, Directory.NewAccount);
         }
 
         /// <summary>
@@ -181,13 +193,14 @@
                 KeyAuthorization = authorization
             };
 
-            var (result, response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken);
+            var (result, response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken)
+                .ConfigureAwait(false);
             if (result is AuthorizationChallengeResponse acmeOrder)
             {
                 return acmeOrder;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during CompleteChallenge.", response, Directory.NewAccount);
+            throw new InvalidServerResponseException("CompleteChallenge.", response, Directory.NewAccount);
         }
 
         /// <summary>
@@ -204,13 +217,14 @@
                 KeyAuthorization = jws.GetKeyAuthorization(token)
             };
 
-            var (result, response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken);
+            var (result, response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken)
+                .ConfigureAwait(false);
             if (result is AuthorizationChallengeResponse acmeOrder)
             {
                 return acmeOrder;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during UpdateChallenge.", response, Directory.NewAccount);
+            throw new InvalidServerResponseException("UpdateChallenge.", response, Directory.NewAccount);
         }
 
         /// <summary>
@@ -223,6 +237,16 @@
         /// <remarks>The subjectname for the request is the first identifier in <paramref name="order"/>. Subsequent identifiers are added as alternative names.</remarks>
         public async Task<Order> RequestCertificateAsync(Order order, RSACryptoServiceProvider key, CancellationToken cancellationToken = default)
         {
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order));
+            }
+
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
             var identifiers = order.Identifiers.Select(item => item.Value).ToList();
             if (identifiers.Any(x => x[0] == '*'))
             {
@@ -244,13 +268,14 @@
                 CSR = Utilities.Base64UrlEncoded(csr.CreateSigningRequest())
             };
 
-            var (result, responseText) = await client.PostAsync<Order>(order.Finalize, message, cancellationToken);
+            var (result, responseText) = await client.PostAsync<Order>(order.Finalize, message, cancellationToken)
+                .ConfigureAwait(false);
             if (result is Order acmeOrder)
             {
                 return acmeOrder;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during RequestCertificate.", responseText, order.Finalize.ToString());
+            throw new InvalidServerResponseException("RequestCertificate.", responseText, order.Finalize);
         }
 
         /// <summary>
@@ -261,13 +286,19 @@
         /// <returns>An updated <see cref="Order"/> object.</returns>
         public async Task<Order> UpdateOrderAsync(Order order, CancellationToken cancellationToken = default)
         {
-            var (result, responseText) = await client.GetAsync<Order>(order.Location, cancellationToken);
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order));
+            }
+
+            var (result, responseText) = await client.GetAsync<Order>(order.Location, cancellationToken)
+                .ConfigureAwait(false);
             if (result is Order acmeOrder)
             {
                 return acmeOrder;
             }
 
-            throw new InvalidServerResponse("Invalid response from server during UpdateOrder.", responseText, order.Location.ToString());
+            throw new InvalidServerResponseException("UpdateOrder.", responseText, order.Location);
         }
 
         /// <summary>
@@ -279,13 +310,18 @@
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="order"/>.Status isn't <see cref="Order.Valid"/></exception>
         public async Task<X509Certificate2> GetCertificateAsync(Order order, CancellationToken cancellationToken = default)
         {
-            if (order.Status != ACMEStatus.Valid)
+            if (order == null)
             {
-                var exception = new ArgumentOutOfRangeException(nameof(order.Status), "Order status is not in valid range.");
-                throw exception;
+                throw new ArgumentNullException(nameof(order));
             }
 
-            var (result, responseText) = await client.GetAsync<string>(order.Certificate, cancellationToken);
+            if (order.Status != ACMEStatus.Valid)
+            {
+                throw new ArgumentOutOfRangeException(nameof(order.Status), "Order status is not in valid range.");
+            }
+
+            var (result, _) = await client.GetAsync<string>(order.Certificate, cancellationToken)
+                .ConfigureAwait(false);
             var certificate = new X509Certificate2(Encoding.UTF8.GetBytes(result));
             return certificate;
         }
@@ -297,7 +333,8 @@
         /// <returns><see cref="ACMEDirectory"/></returns>
         public async Task<ACMEDirectory> GetDirectoryAsync(CancellationToken token = default)
         {
-            Directory = await RequestDirectoryAsync(token).ConfigureAwait(false);
+            Directory = await RequestDirectoryAsync(token)
+                .ConfigureAwait(false);
             return Directory;
         }
 
@@ -323,13 +360,14 @@
                 Certificate = Utilities.Base64UrlEncoded(certificate.GetRawCertData())
             };
 
-            await client.PostAsync<string>(Directory.RevokeCertificate, revocationRequest, cancellationToken);
+            await client.PostAsync<string>(Directory.RevokeCertificate, revocationRequest, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private async Task<string> NewNonceAsync(CancellationToken token = default)
         {
-            var response = await client.HeadAsync<string>(Directory.NewNonce, token);
-            nonce = response.response;
+            var response = await client.HeadAsync<string>(Directory.NewNonce, token)
+                .ConfigureAwait(false);
             return response.response;
         }
 
@@ -337,13 +375,14 @@
         {
             var uri = new Uri(endpoint, "directory");
 
-            var (result, text) = await client.GetAsync<ACMEDirectory>(uri, cancellationToken);
+            var (result, text) = await client.GetAsync<ACMEDirectory>(uri, cancellationToken)
+                .ConfigureAwait(false);
             if (result is ACMEDirectory)
             {
                 return result;
             }
 
-            throw new InvalidServerResponse("Invalid response from server when requesting directory.", text, uri);
+            throw new InvalidServerResponseException("Invalid response from server when requesting directory.", text, uri);
         }
     }
 }

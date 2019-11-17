@@ -5,10 +5,10 @@
     /// </summary>
     public static class ACMEEnvironment
     {
-        public static string StagingV1 = "https://acme-staging.api.letsencrypt.org/directory";
-        public static string ProductionV1 = "https://acme-v01.api.letsencrypt.org/directory";
+        public const string StagingV1 = "https://acme-staging.api.letsencrypt.org/directory";
+        public const string ProductionV1 = "https://acme-v01.api.letsencrypt.org/directory";
 
-        public static string StagingV2 = "https://acme-staging-v02.api.letsencrypt.org/directory";
-        public static string ProductionV2 = "https://acme-v02.api.letsencrypt.org/directory";
+        public const string StagingV2 = "https://acme-staging-v02.api.letsencrypt.org/directory";
+        public const string ProductionV2 = "https://acme-v02.api.letsencrypt.org/directory";
     }
 }

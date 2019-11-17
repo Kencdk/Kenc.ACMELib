@@ -14,17 +14,15 @@
     using Kenc.ACMELib.ACMEEntities;
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.Exceptions;
-    using Kenc.ACMELib.JWS;
+    using Kenc.ACMELib.JsonWebSignature;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
     public class ACMERestClient : IRestClient
     {
-        private const string ApplicationJsonMime = "application/json";
         private const string ApplicationJoseAndJson = "application/jose+json";
         private const string ApplicationProblemJsonMime = "application/problem+json";
         private const string ApplicationPemCertChainMime = "application/pem-certificate-chain";
-
 
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
@@ -47,7 +45,7 @@
             var runtimeVersion = client.Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
 
             this.jws = jws;
-            UserAgent = $"{client.FullName}/{runtimeVersion.Version.ToString()} ({RuntimeInformation.OSDescription} {RuntimeInformation.ProcessArchitecture})";
+            UserAgent = $"{client.FullName}/{runtimeVersion.Version} ({RuntimeInformation.OSDescription} {RuntimeInformation.ProcessArchitecture})";
         }
 
         /// <summary>
@@ -102,7 +100,8 @@
                 var encodedMessage = jws.Encode(message, new JwsHeader(nonce, uri));
                 var json = JsonConvert.SerializeObject(encodedMessage, JsonSettings);
 
-                var stream = await request.GetRequestStreamAsync();
+                var stream = await request.GetRequestStreamAsync()
+                    .ConfigureAwait(false);
                 var encoded = Encoding.UTF8.GetBytes(json);
                 stream.Write(encoded, 0, encoded.Length);
                 stream.Close();
@@ -114,7 +113,8 @@
             WebResponse response;
             try
             {
-                response = (HttpWebResponse)await request.GetResponseAsync();
+                response = (HttpWebResponse)await request.GetResponseAsync()
+                    .ConfigureAwait(false);
             }
             catch (WebException exception)
             {
