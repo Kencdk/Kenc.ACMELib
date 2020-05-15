@@ -24,7 +24,7 @@
         }
 
         private const int ENTER = 13, BACKSP = 8, CTRLBACKSP = 127;
-        private static int[] Filtered = { 0, 27 /* escape */, 9 /*tab*/, 10 /* line feed */ };
+        private static readonly int[] Filtered = { 0, 27 /* escape */, 9 /*tab*/, 10 /* line feed */ };
 
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -46,19 +46,20 @@
                 throw new InvalidOperationException("No console input");
             }
 
-            if (!GetConsoleMode(stdInputHandle, out int previousConsoleMode))
+            if (!GetConsoleMode(stdInputHandle, out var previousConsoleMode))
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not get console mode.");
             }
 
             // disable console input echo
-            if (!SetConsoleMode(stdInputHandle, previousConsoleMode & ~(int)ConsoleMode.ENABLE_ECHO_INPUT))
+            if (!SetConsoleMode(stdInputHandle, dwMode: previousConsoleMode & ~(int)ConsoleMode.ENABLE_ECHO_INPUT))
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not disable console input echo.");
             }
 
-            char character = (char)0;
             var secureString = new SecureString();
+
+            char character;
             while ((character = Console.ReadKey(true).KeyChar) != ENTER)
             {
                 if (((character == BACKSP) || (character == CTRLBACKSP))

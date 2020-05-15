@@ -15,11 +15,11 @@
     using Kenc.ACMELib.Exceptions;
     using Kenc.ACMELib.Exceptions.API;
 
-    class Program
+    internal class Program
     {
         private static readonly string keyPath = "acmeuser.key";
 
-        static async Task Main(string[] args)
+        private static async Task Main()
         {
             Console.WriteLine("Kenc.ACMEClient example");
             Console.WriteLine("USE AT OWN RISK");
@@ -46,8 +46,8 @@
 
             var rsaKey = RSA.Create(rsaCryptoServiceProvider.ExportParameters(true));
 
-            var acmeClient = new ACMEClient(ACMEEnvironment.StagingV2, rsaKey, new RestClientFactory());
-            var directory = await acmeClient.InitializeAsync();
+            var acmeClient = new ACMEClient(ACMEEnvironment.ProductionV2, rsaKey, new RestClientFactory());
+            ACMEDirectory directory = await acmeClient.InitializeAsync();
 
             Account account = null;
             if (existingKey)
@@ -102,7 +102,7 @@
                 return;
             }
 
-            var domainTask = OrderDomains(acmeClient, domainNames);
+            Task domainTask = OrderDomains(acmeClient, domainNames);
             domainTask.Wait();
 
             // enumerate all certs
@@ -112,8 +112,8 @@
             var foo = HandleConsoleInput("Continue?", new[] { "y", "yes", "n", "no" }, false).ToLower();
             if (foo == "y" || foo == "yes")
             {
-                var certificates = certificateFiles.Select(path => X509Certificate2.CreateFromCertFile(path));
-                foreach (var certificate in certificates)
+                IEnumerable<X509Certificate> certificates = certificateFiles.Select(path => X509Certificate2.CreateFromCertFile(path));
+                foreach (X509Certificate certificate in certificates)
                 {
                     try
                     {
@@ -134,9 +134,9 @@
             }
         }
 
-        static async Task OrderDomains(ACMEClient acmeClient, params string[] domainNames)
+        private static async Task OrderDomains(ACMEClient acmeClient, params string[] domainNames)
         {
-            var domains = domainNames.Select(domain => new OrderIdentifier { Type = ChallengeType.DNSChallenge, Value = domain });
+            IEnumerable<OrderIdentifier> domains = domainNames.Select(domain => new OrderIdentifier { Type = ChallengeType.DNSChallenge, Value = domain });
             Uri[] validations = null;
             Order order = null;
             while (order == null)
@@ -153,8 +153,8 @@
             Console.WriteLine($"Order location: {order.Location}");
 
             validations = order.Authorizations;
-            var auths = await RetrieveAuthz(acmeClient, validations);
-            foreach (var item in auths)
+            IEnumerable<AuthorizationChallengeResponse> auths = await RetrieveAuthz(acmeClient, validations);
+            foreach (AuthorizationChallengeResponse item in auths)
             {
                 if (item.Status == ACMEStatus.Valid)
                 {
@@ -162,7 +162,7 @@
                     continue;
                 }
 
-                var validChallenge = item.Challenges.Where(challenge => challenge.Status == ACMEStatus.Valid).FirstOrDefault();
+                AuthorizationChallenge validChallenge = item.Challenges.Where(challenge => challenge.Status == ACMEStatus.Valid).FirstOrDefault();
                 if (validChallenge != null)
                 {
                     Console.WriteLine("Found a valid challenge, skipping domain.");
@@ -170,10 +170,10 @@
                     continue;
                 }
 
-                var applicableChallenges = item.Wildcard ? item.Challenges.Where(x => x.Type == "dns-01") :
+                IEnumerable<AuthorizationChallenge> applicableChallenges = item.Wildcard ? item.Challenges.Where(x => x.Type == "dns-01") :
                     item.Challenges;
 
-                foreach (var challenge in applicableChallenges)
+                foreach (AuthorizationChallenge challenge in applicableChallenges)
                 {
                     Console.WriteLine($"Status: {challenge.Status}");
                     Console.WriteLine($"Challenge: {challenge.Url}");
@@ -203,7 +203,7 @@
                         var validation = await ValidateChallengeCompletion(challenge, item.Identifier.Value);
                         if (validation)
                         {
-                            var c = await CompleteChallenge(acmeClient, challenge, challenge.AuthorizationToken);
+                            AuthorizationChallengeResponse c = await CompleteChallenge(acmeClient, challenge, challenge.AuthorizationToken);
                             while (c.Status == ACMEStatus.Pending)
                             {
                                 await Task.Delay(5000);
@@ -229,7 +229,7 @@
                 }
             }
 
-            foreach (var challenge in order.Authorizations)
+            foreach (Uri challenge in order.Authorizations)
             {
                 AuthorizationChallengeResponse c;
                 do
@@ -261,7 +261,6 @@
             Order certOrder = null;
             try
             {
-
                 certOrder = await acmeClient.RequestCertificateAsync(order, certKey);
                 while (certOrder.Status == ACMEStatus.Processing)
                 {
@@ -278,17 +277,17 @@
                 return;
             }
 
-            var cert = await acmeClient.GetCertificateAsync(certOrder);
+            X509Certificate2 cert = await acmeClient.GetCertificateAsync(certOrder);
             var certdata = cert.Export(X509ContentType.Cert);
             var publicKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.crt";
             File.WriteAllBytes(publicKeyFilename, certdata);
             Console.WriteLine($"Public certificate written to file {publicKeyFilename}");
 
             // combine the two!
-            var properCert = cert.CopyWithPrivateKey(certKey);
+            X509Certificate2 properCert = cert.CopyWithPrivateKey(certKey);
 
             Console.WriteLine("Enter password to secure PFX");
-            var password = PasswordInput.ReadPassword();
+            System.Security.SecureString password = PasswordInput.ReadPassword();
             var pfxData = properCert.Export(X509ContentType.Pfx, password);
 
             var privateKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.pfx";
@@ -296,17 +295,16 @@
             Console.WriteLine($"Private certificate written to file {privateKeyFilename}");
         }
 
-        static string FixFilename(string filename)
+        private static string FixFilename(string filename)
         {
             return filename.Replace("*", "");
         }
 
-        static async Task<bool> ValidateChallengeCompletion(AuthorizationChallenge challenge, string domainName)
+        private static async Task<bool> ValidateChallengeCompletion(AuthorizationChallenge challenge, string domainName)
         {
             if (challenge.Type == "http-01")
             {
                 return await ValidateHttpChallenge(challenge.Token, challenge.AuthorizationToken, domainName);
-
             }
             else if (challenge.Type == "dns-01")
             {
@@ -322,7 +320,7 @@
             }
         }
 
-        static async Task<bool> ValidateHttpChallenge(string token, string expectedValue, string domain)
+        private static async Task<bool> ValidateHttpChallenge(string token, string expectedValue, string domain)
         {
             var domainUrl = domain.Replace("*", "");
             var url = $"http://{domainUrl}/.well-known/acme-challenge/{token}";
@@ -336,23 +334,19 @@
                     return false;
                 }
 
-                using (var stream = response.GetResponseStream())
+                using Stream stream = response.GetResponseStream();
+                using var streamReader = new StreamReader(stream);
+                var received = streamReader.ReadToEnd();
+                if (string.Compare(received, expectedValue, StringComparison.Ordinal) != 0)
                 {
-                    using (var streamReader = new StreamReader(stream))
-                    {
-                        var received = streamReader.ReadToEnd();
-                        if (string.Compare(received, expectedValue, StringComparison.Ordinal) != 0)
-                        {
-                            Console.WriteLine($"{url} responded with unexpected value.");
-                            Console.WriteLine(received);
-                            Console.WriteLine(expectedValue);
-                            return false;
-                        }
-                        else
-                        {
-                            return true;
-                        }
-                    }
+                    Console.WriteLine($"{url} responded with unexpected value.");
+                    Console.WriteLine(received);
+                    Console.WriteLine(expectedValue);
+                    return false;
+                }
+                else
+                {
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -362,7 +356,7 @@
             }
         }
 
-        static string HandleConsoleInput(string prompt, string[] acceptedResponses, bool caseSensitive = false)
+        private static string HandleConsoleInput(string prompt, string[] acceptedResponses, bool caseSensitive = false)
         {
             while (true)
             {
@@ -380,11 +374,11 @@
             }
         }
 
-        private static async Task<Order> NewOrderAsync(Kenc.ACMELib.ACMEClient acmeClient, IEnumerable<OrderIdentifier> domains)
+        private static async Task<Order> NewOrderAsync(ACMEClient acmeClient, IEnumerable<OrderIdentifier> domains)
         {
             try
             {
-                var result = await acmeClient.OrderAsync(domains);
+                Order result = await acmeClient.OrderAsync(domains);
                 return result;
             }
             catch (ACMEException ex)
@@ -401,14 +395,14 @@
             return null;
         }
 
-        private static async Task<IEnumerable<AuthorizationChallengeResponse>> RetrieveAuthz(Kenc.ACMELib.ACMEClient acmeClient, Uri[] uris)
+        private static async Task<IEnumerable<AuthorizationChallengeResponse>> RetrieveAuthz(ACMEClient acmeClient, Uri[] uris)
         {
             var challenges = new List<AuthorizationChallengeResponse>();
-            foreach (var uri in uris)
+            foreach (Uri uri in uris)
             {
                 try
                 {
-                    var result = await acmeClient.GetAuthorizationChallengeAsync(uri);
+                    AuthorizationChallengeResponse result = await acmeClient.GetAuthorizationChallengeAsync(uri);
                     challenges.Add(result);
                 }
                 catch (Exception ex)
@@ -419,7 +413,7 @@
             return challenges;
         }
 
-        private static async Task<AuthorizationChallengeResponse> CompleteChallenge(Kenc.ACMELib.ACMEClient acmeClient, AuthorizationChallenge challenge, string value)
+        private static async Task<AuthorizationChallengeResponse> CompleteChallenge(ACMEClient acmeClient, AuthorizationChallenge challenge, string value)
         {
             try
             {
@@ -433,17 +427,9 @@
             return null;
         }
 
-        private static async Task<string> DownloadContentAsync(Uri url)
-        {
-            using (WebClient client = new WebClient())
-            {
-                return await client.DownloadStringTaskAsync(url);
-            }
-        }
-
         private static void SaveRSAKeyToFile(RSACryptoServiceProvider rsaCryptoServiceProvider, string filename)
         {
-            byte[] key = rsaCryptoServiceProvider.ExportCspBlob(true);
+            var key = rsaCryptoServiceProvider.ExportCspBlob(true);
             var strKey = Convert.ToBase64String(key);
             File.WriteAllText(filename, strKey);
         }

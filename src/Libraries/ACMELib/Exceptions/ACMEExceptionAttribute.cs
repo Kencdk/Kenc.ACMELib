@@ -13,7 +13,7 @@
 
         public ACMEExceptionAttribute(string descriptor)
         {
-            this.Descriptor = descriptor;
+            Descriptor = descriptor;
         }
     }
 }

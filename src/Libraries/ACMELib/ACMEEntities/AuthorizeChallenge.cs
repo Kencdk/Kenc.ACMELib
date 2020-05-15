@@ -9,6 +9,5 @@
     {
         [JsonProperty("keyAuthorization")]
         public string KeyAuthorization { get; set; }
-
     }
 }
