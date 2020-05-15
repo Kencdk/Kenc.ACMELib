@@ -29,10 +29,8 @@
 
             var json = "{\"e\":\"" + jwk.Exponent + "\",\"kty\":\"RSA\",\"n\":\"" + jwk.Modulus + "\"}";
 
-            using (var sha256 = SHA256.Create())
-            {
-                return Utilities.Base64UrlEncoded(sha256.ComputeHash(Encoding.UTF8.GetBytes(json)));
-            }
+            using var sha256 = SHA256.Create();
+            return Utilities.Base64UrlEncoded(sha256.ComputeHash(Encoding.UTF8.GetBytes(json)));
         }
     }
 }

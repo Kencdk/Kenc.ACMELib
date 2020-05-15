@@ -33,8 +33,8 @@
         /// <param name="requestUri">Uri of request.</param>
         public InvalidServerResponseException(string request, string response, Uri requestUri) : base($"Invalid response from server during {request}.")
         {
-            this.Response = response;
-            this.RequestUri = requestUri;
+            Response = response;
+            RequestUri = requestUri;
         }
     }
 }

@@ -17,10 +17,10 @@
     /// Implementation of an ACME client.
     /// Following https://tools.ietf.org/html/draft-ietf-acme-acme-16
     /// </summary>
+    /// <inheritdoc/>
     public class ACMEClient : IACMEClient
     {
         private readonly Jws jws;
-        private readonly RSA rsaKey;
         private readonly Uri endpoint;
 
         public ACMEDirectory Directory { get; private set; }
@@ -46,7 +46,7 @@
             }
 
             this.endpoint = new Uri(endpoint);
-            this.rsaKey = rsaKey ?? throw new ArgumentNullException(nameof(rsaKey));
+            _ = rsaKey ?? throw new ArgumentNullException(nameof(rsaKey));
 
             jws = new Jws(rsaKey, string.Empty);
             client = restClientFactory.CreateRestClient(jws);
@@ -61,14 +61,6 @@
             return Directory;
         }
 
-        /// <summary>
-        /// Register a new account using the previously supplied <see cref="RSA"/> key.
-        /// </summary>
-        /// <param name="contacts">Means of contact as a string array</param>
-        /// <param name="cancellationToken">Cancellation token for the async call.</param>
-        /// <returns><see cref="Account"/></returns>
-        /// <exception cref="ACMEException">Thrown for all errors from ACME servers.</exception>
-        /// <exception cref="InvalidServerResponseException">Thrown when the response from the server wasn't expected.</exception>
         public async Task<Account> RegisterAsync(string[] contacts, CancellationToken cancellationToken = default)
         {
             if (Directory == null)
@@ -83,7 +75,7 @@
                 Contacts = contacts,
             };
 
-            var (result, response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken)
+            (Account result, var response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken)
                 .ConfigureAwait(false);
             if (result is Account acmeAccount)
             {
@@ -93,11 +85,6 @@
             throw new InvalidServerResponseException("registration.", response, Directory.NewAccount);
         }
 
-        /// <summary>
-        /// Get an existing account record using the encryption key specified in constructor.
-        /// </summary>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns>A <see cref="Account"/> record if one exists.</returns>
         public async Task<Account> GetAccountAsync(CancellationToken cancellationToken = default)
         {
             if (Directory == null)
@@ -111,7 +98,7 @@
                 OnlyReturnExisting = true
             };
 
-            var (result, response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken)
+            (Account result, var response) = await client.PostAsync<Account>(Directory.NewAccount, message, cancellationToken)
                 .ConfigureAwait(false);
             if (result is Account acmeAccount)
             {
@@ -121,12 +108,6 @@
             throw new InvalidServerResponseException("account retrieval.", response, Directory.NewAccount);
         }
 
-        /// <summary>
-        /// Sends an order for the specified domains and authorization types.
-        /// </summary>
-        /// <param name="identifiers">An <see cref="IEnumerable{OrderIdentifier}"/> specifying domain and <see cref="ChallengeType"/>.</param>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns>An <see cref="Order"/> object with details for the requested identifiers.</returns>
         public async Task<Order> OrderAsync(IEnumerable<OrderIdentifier> identifiers, CancellationToken cancellationToken = default)
         {
             var message = new Order
@@ -135,7 +116,7 @@
                 Identifiers = identifiers.ToArray()
             };
 
-            var (result, response) = await client.PostAsync<Order>(Directory.NewOrder, message, cancellationToken)
+            (Order result, var response) = await client.PostAsync<Order>(Directory.NewOrder, message, cancellationToken)
                 .ConfigureAwait(false);
             if (result is Order acmeOrder)
             {
@@ -145,21 +126,15 @@
             throw new InvalidServerResponseException("order.", response, Directory.NewOrder);
         }
 
-        /// <summary>
-        /// Get authorization challenge
-        /// </summary>
-        /// <param name="uri">Uri of the challenge.</param>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns><see cref="AuthorizationChallengeResponse"/></returns>
         public async Task<AuthorizationChallengeResponse> GetAuthorizationChallengeAsync(Uri uri, CancellationToken cancellationToken = default)
         {
-            var (result, response) = await client.GetAsync<AuthorizationChallengeResponse>(uri, cancellationToken)
+            (AuthorizationChallengeResponse result, var response) = await client.GetAsync<AuthorizationChallengeResponse>(uri, cancellationToken)
                 .ConfigureAwait(false);
             if (result is AuthorizationChallengeResponse acmeOrder)
             {
                 if (result.Challenges != null)
                 {
-                    foreach (var challenge in result.Challenges)
+                    foreach (AuthorizationChallenge challenge in result.Challenges)
                     {
                         if (challenge.Type == "dns-01")
                         {
@@ -178,14 +153,6 @@
             throw new InvalidServerResponseException("GetAuthorizationChallenge.", response, Directory.NewAccount);
         }
 
-        /// <summary>
-        /// Notify ACME servers that challenges are completed.
-        /// </summary>
-        /// <param name="uri">Uri of completed challenge.</param>
-        /// <param name="token">Challenge token.</param>
-        /// <param name="authorization">Authorization token.</param>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns><see cref="AuthorizationChallengeResponse"/></returns>
         public async Task<AuthorizationChallengeResponse> CompleteChallengeAsync(Uri uri, string token, string authorization, CancellationToken cancellationToken = default)
         {
             var message = new AuthorizeChallenge
@@ -193,7 +160,7 @@
                 KeyAuthorization = authorization
             };
 
-            var (result, response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken)
+            (AuthorizationChallengeResponse result, var response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken)
                 .ConfigureAwait(false);
             if (result is AuthorizationChallengeResponse acmeOrder)
             {
@@ -203,13 +170,6 @@
             throw new InvalidServerResponseException("CompleteChallenge.", response, Directory.NewAccount);
         }
 
-        /// <summary>
-        /// Updates a challenge record.
-        /// </summary>
-        /// <param name="uri">Uri of the challenge.</param>
-        /// <param name="token">Token of the challenge.</param>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns></returns>
         public async Task<AuthorizationChallengeResponse> UpdateChallengeAsync(Uri uri, string token, CancellationToken cancellationToken = default)
         {
             var message = new AuthorizeChallenge
@@ -217,7 +177,7 @@
                 KeyAuthorization = jws.GetKeyAuthorization(token)
             };
 
-            var (result, response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken)
+            (AuthorizationChallengeResponse result, var response) = await client.PostAsync<AuthorizationChallengeResponse>(uri, message, cancellationToken)
                 .ConfigureAwait(false);
             if (result is AuthorizationChallengeResponse acmeOrder)
             {
@@ -227,14 +187,6 @@
             throw new InvalidServerResponseException("UpdateChallenge.", response, Directory.NewAccount);
         }
 
-        /// <summary>
-        /// Request a certificate.
-        /// </summary>
-        /// <param name="order">A previously completed order.</param>
-        /// <param name="key">The private key to sign the certificate request with.</param>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns>An updated <see cref="Order"/> object.</returns>
-        /// <remarks>The subjectname for the request is the first identifier in <paramref name="order"/>. Subsequent identifiers are added as alternative names.</remarks>
         public async Task<Order> RequestCertificateAsync(Order order, RSACryptoServiceProvider key, CancellationToken cancellationToken = default)
         {
             if (order == null)
@@ -268,7 +220,7 @@
                 CSR = Utilities.Base64UrlEncoded(csr.CreateSigningRequest())
             };
 
-            var (result, responseText) = await client.PostAsync<Order>(order.Finalize, message, cancellationToken)
+            (Order result, var responseText) = await client.PostAsync<Order>(order.Finalize, message, cancellationToken)
                 .ConfigureAwait(false);
             if (result is Order acmeOrder)
             {
@@ -278,12 +230,6 @@
             throw new InvalidServerResponseException("RequestCertificate.", responseText, order.Finalize);
         }
 
-        /// <summary>
-        /// Requests a status update from ACME regarding <paramref name="order"/>.
-        /// </summary>
-        /// <param name="order">A previously created order.</param>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns>An updated <see cref="Order"/> object.</returns>
         public async Task<Order> UpdateOrderAsync(Order order, CancellationToken cancellationToken = default)
         {
             if (order == null)
@@ -291,7 +237,7 @@
                 throw new ArgumentNullException(nameof(order));
             }
 
-            var (result, responseText) = await client.GetAsync<Order>(order.Location, cancellationToken)
+            (Order result, var responseText) = await client.GetAsync<Order>(order.Location, cancellationToken)
                 .ConfigureAwait(false);
             if (result is Order acmeOrder)
             {
@@ -301,13 +247,6 @@
             throw new InvalidServerResponseException("UpdateOrder.", responseText, order.Location);
         }
 
-        /// <summary>
-        /// Get the certificate matching your order.
-        /// </summary>
-        /// <param name="order">A valid order.</param>
-        /// <param name="cancellationToken">Cancellation token for the async request.</param>
-        /// <returns>A <see cref="X509Certificate2"/> for the specified domain(s).</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="order"/>.Status isn't <see cref="Order.Valid"/></exception>
         public async Task<X509Certificate2> GetCertificateAsync(Order order, CancellationToken cancellationToken = default)
         {
             if (order == null)
@@ -320,17 +259,12 @@
                 throw new ArgumentOutOfRangeException(nameof(order.Status), "Order status is not in valid range.");
             }
 
-            var (result, _) = await client.GetAsync<string>(order.Certificate, cancellationToken)
+            (var result, var _) = await client.GetAsync<string>(order.Certificate, cancellationToken)
                 .ConfigureAwait(false);
             var certificate = new X509Certificate2(Encoding.UTF8.GetBytes(result));
             return certificate;
         }
 
-        /// <summary>
-        /// Gets the directory listing from the specified ACME server.
-        /// </summary>
-        /// <param name="token">Cancellation token for the async requsts.</param>
-        /// <returns><see cref="ACMEDirectory"/></returns>
         public async Task<ACMEDirectory> GetDirectoryAsync(CancellationToken token = default)
         {
             Directory = await RequestDirectoryAsync(token)
@@ -338,15 +272,6 @@
             return Directory;
         }
 
-        /// <summary>
-        /// Send a revoke certificate request for the selected certificate.
-        /// </summary>
-        /// <param name="certificate">Certificate to revoke.</param>
-        /// <param name="revocationReason">Reason for revocation.</param>
-        /// <param name="cancellationToken">Cancellation token for the async call.</param>
-        /// <returns></returns>
-        /// <exception cref="Exceptions.API.UnauthorizedException">Thrown if the user isn't authorized to revoke the certificate.</exception>
-        /// <exception cref="Exceptions.API.BadRevocationReasonException">Thrown if the <paramref name="revocationReason"/> isn't allowed.</exception>
         public async Task RevokeCertificateAsync(X509Certificate certificate, RevocationReason revocationReason, CancellationToken cancellationToken = default)
         {
             if (certificate == null)
@@ -366,16 +291,16 @@
 
         private async Task<string> NewNonceAsync(CancellationToken token = default)
         {
-            var response = await client.HeadAsync<string>(Directory.NewNonce, token)
+            (var _, var response) = await client.HeadAsync<string>(Directory.NewNonce, token)
                 .ConfigureAwait(false);
-            return response.response;
+            return response;
         }
 
         private async Task<ACMEDirectory> RequestDirectoryAsync(CancellationToken cancellationToken = default)
         {
             var uri = new Uri(endpoint, "directory");
 
-            var (result, text) = await client.GetAsync<ACMEDirectory>(uri, cancellationToken)
+            (ACMEDirectory result, var text) = await client.GetAsync<ACMEDirectory>(uri, cancellationToken)
                 .ConfigureAwait(false);
             if (result is ACMEDirectory)
             {

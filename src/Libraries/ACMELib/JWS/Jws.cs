@@ -18,8 +18,7 @@
         {
             this.rsa = rsa ?? throw new ArgumentNullException(nameof(rsa));
 
-            var publicParameters = rsa.ExportParameters(false);
-
+            RSAParameters publicParameters = rsa.ExportParameters(false);
             jwk = new Jwk
             {
                 KeyType = "RSA",
@@ -68,10 +67,8 @@
         public string GetDNSKeyAuthorization(string token)
         {
             var json = $"{token}.{jwk.GetSha256Thumbprint()}";
-            using (var sha256 = SHA256.Create())
-            {
-                return Utilities.Base64UrlEncoded(sha256.ComputeHash(Encoding.UTF8.GetBytes(json)));
-            }
+            using var sha256 = SHA256.Create();
+            return Utilities.Base64UrlEncoded(sha256.ComputeHash(Encoding.UTF8.GetBytes(json)));
         }
 
         internal void SetKeyId(Account account)

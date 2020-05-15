@@ -14,14 +14,14 @@
 
         public JwsHeader(string algorithm, Jwk key)
         {
-            Algorithm = algorithm;
             Key = key;
+            Algorithm = algorithm;
         }
 
         public JwsHeader(string nonce, Uri url)
         {
-            this.Url = url;
-            this.Nonce = nonce;
+            Url = url;
+            Nonce = nonce;
         }
 
         [JsonProperty("alg")]

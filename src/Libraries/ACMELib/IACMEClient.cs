@@ -62,8 +62,8 @@
         /// <param name="contacts">Means of contact as a string array</param>
         /// <param name="cancellationToken">Cancellation token for the async call.</param>
         /// <returns><see cref="Account"/></returns>
-        /// <exception cref="ACMEException">Thrown for all errors from ACME servers.</exception>
-        /// <exception cref="InvalidServerResponse">Thrown when the response from the server wasn't expected.</exception>
+        /// <exception cref="Exceptions.ACMEException">Thrown for all errors from ACME servers.</exception>
+        /// <exception cref="Exceptions.InvalidServerResponseException">Thrown when the response from the server wasn't expected.</exception>
         Task<Account> RegisterAsync(string[] contacts, CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -87,6 +87,13 @@
         /// <remarks>The subject name for the request is the first identifier in <paramref name="order"/>. Subsequent identifiers are added as alternative names.</remarks>
         Task<Order> RequestCertificateAsync(Order order, RSACryptoServiceProvider key, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Updates a challenge record.
+        /// </summary>
+        /// <param name="uri">Uri of the challenge.</param>
+        /// <param name="token">Token of the challenge.</param>
+        /// <param name="cancellationToken">Cancellation token for the async request.</param>
+        /// <returns><see cref="AuthorizationChallengeResponse"/>.</returns>
         Task<AuthorizationChallengeResponse> UpdateChallengeAsync(Uri uri, string token, CancellationToken cancellationToken = default);
 
         /// <summary>

@@ -24,14 +24,6 @@
         {
         }
 
-        private ACMEException(string message) : base(message)
-        {
-        }
-
-        private ACMEException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
         private ACMEException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
@@ -41,7 +33,7 @@
             Status = status;
             if (string.IsNullOrEmpty(descriptor))
             {
-                var type = GetType();
+                Type type = GetType();
                 var acmeAttributes = type.GetCustomAttributes(typeof(ACMEExceptionAttribute), true);
                 if (acmeAttributes != null && acmeAttributes.Length > 0)
                 {

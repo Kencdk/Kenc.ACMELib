@@ -41,8 +41,8 @@
         /// <param name="logger">Optional logger.</param>
         public ACMERestClient(Jws jws)
         {
-            var client = typeof(ACMEClient);
-            var runtimeVersion = client.Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
+            Type client = typeof(ACMEClient);
+            AssemblyFileVersionAttribute runtimeVersion = client.Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
 
             this.jws = jws;
             UserAgent = $"{client.FullName}/{runtimeVersion.Version} ({RuntimeInformation.OSDescription} {RuntimeInformation.ProcessArchitecture})";
@@ -85,7 +85,7 @@
             return await SendAsync<TResult>(HttpMethod.Post, uri, message, token).ConfigureAwait(false);
         }
 
-        private async Task<(TResult Result, string Response)> SendAsync<TResult>(HttpMethod method, Uri uri, object message, CancellationToken token) where TResult : class
+        private async Task<(TResult Result, string Response)> SendAsync<TResult>(HttpMethod method, Uri uri, object message, CancellationToken cancellationToken) where TResult : class
         {
             var request = (HttpWebRequest)WebRequest.Create(uri);
             request.Method = method.ToString();
@@ -97,16 +97,18 @@
                     throw new NoNonceException();
                 }
 
-                var encodedMessage = jws.Encode(message, new JwsHeader(nonce, uri));
+                JwsMessage encodedMessage = jws.Encode(message, new JwsHeader(nonce, uri));
                 var json = JsonConvert.SerializeObject(encodedMessage, JsonSettings);
 
-                var stream = await request.GetRequestStreamAsync()
+                Stream stream = await request.GetRequestStreamAsync()
                     .ConfigureAwait(false);
                 var encoded = Encoding.UTF8.GetBytes(json);
                 stream.Write(encoded, 0, encoded.Length);
                 stream.Close();
                 request.ContentLength = encoded.Length;
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             request.Headers[HttpRequestHeader.UserAgent] = UserAgent;
             request.Headers[HttpRequestHeader.ContentType] = ApplicationJoseAndJson;
@@ -126,16 +128,12 @@
                 nonce = response.Headers.GetValues("Replay-Nonce").First();
             }
 
-            string responseBody = string.Empty;
+            var responseBody = string.Empty;
             if (response.ContentLength > 0)
             {
-                using (var stream = response.GetResponseStream())
-                {
-                    using (var reader = new StreamReader(stream))
-                    {
-                        responseBody = reader.ReadToEnd();
-                    }
-                }
+                using Stream stream = response.GetResponseStream();
+                using var reader = new StreamReader(stream);
+                responseBody = reader.ReadToEnd();
             }
 
             var httpResponse = (HttpWebResponse)response;
@@ -143,7 +141,7 @@
             {
                 if (response.Headers[HttpRequestHeader.ContentType] == ApplicationProblemJsonMime)
                 {
-                    var problem = JsonConvert.DeserializeObject<Problem>(responseBody);
+                    Problem problem = JsonConvert.DeserializeObject<Problem>(responseBody);
                     problem.RawJson = responseBody;
                     ExceptionHelper.ThrowException(problem);
                 }

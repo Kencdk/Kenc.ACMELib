@@ -51,7 +51,7 @@
             var typeWhereAttributeMatches = KnownExceptions.Where(ke =>
             {
                 var attribute = ke.CustomAttributes.FirstOrDefault(ca => ca.AttributeType.IsEquivalentTo(typeof(ACMEExceptionAttribute)));
-                return (string)attribute.ConstructorArguments[0].Value == problem.Type;
+                return string.Compare((string)attribute.ConstructorArguments[0].Value, problem.Type, comparisonType: StringComparison.OrdinalIgnoreCase) == 0;
             }).FirstOrDefault();
 
             if (typeWhereAttributeMatches != null)
