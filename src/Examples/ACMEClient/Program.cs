@@ -46,7 +46,7 @@
 
             var rsaKey = RSA.Create(rsaCryptoServiceProvider.ExportParameters(true));
 
-            var acmeClient = new ACMEClient(ACMEEnvironment.ProductionV2, rsaKey, new RestClientFactory());
+            var acmeClient = new ACMEClient(ACMEEnvironment.StagingV2, rsaKey, new RestClientFactory());
             ACMEDirectory directory = await acmeClient.InitializeAsync();
 
             Account account = null;
