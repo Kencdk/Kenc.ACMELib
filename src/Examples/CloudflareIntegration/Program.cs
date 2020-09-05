@@ -5,6 +5,7 @@
     using System.IO;
     using System.Threading.Tasks;
     using CommandLine;
+    using Kenc.ACMELib.ACMEEntities;
 
     class Program
     {
@@ -35,10 +36,10 @@
             var orderDomains = new OrderDomains(options);
             await orderDomains.ValidateCloudflareConnection();
             await orderDomains.ValidateACMEConnection();
-            var order = await orderDomains.ValidateDomains();
+
+            Order order = await orderDomains.ValidateDomains();
             order = await orderDomains.ValidateOrder(order);
             await orderDomains.RetrieveCertificates(order);
-
         }
 
         static void HandleParseError(IEnumerable<Error> errs)

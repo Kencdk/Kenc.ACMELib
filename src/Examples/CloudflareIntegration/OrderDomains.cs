@@ -68,7 +68,7 @@
 
         public async Task ValidateCloudflareConnection()
         {
-            var cleanedupDomains = options.Domains.Select(x => (x.StartsWith('*') ? x.Substring(2) : x).ToLowerInvariant())
+            var cleanedupDomains = options.Domains.Select(GetRootDomain)
                 .Distinct()
                 .ToList();
 
@@ -262,6 +262,17 @@
             Program.LogLine($"Private certificate written to file {privateKeyFilename}");
         }
 
+        /// <summary>
+        /// Get the root (domain.tld) from a given domain (eg: subdomain.domain.tld)
+        /// </summary>
+        /// <param name="domain">Target domain</param>
+        /// <returns>A string with the root domain incl the top-level-domain</returns>
+        private static string GetRootDomain(string domain)
+        {
+            var parts = domain.ToLowerInvariant().Split('.');
+            return string.Join('.', parts.TakeLast(2));
+        }
+
         private static string FixFilename(string filename)
         {
             return filename.Replace("*", "");
@@ -301,7 +312,7 @@
             var dnsRecordName = $"_acme-challenge.{domain}";
 
             Program.LogLine($"Adding TXT entry {dnsRecordName} with value {value}", true);
-            Zone cloudflareZone = CloudflareZones.GetValueOrDefault(domain);
+            Zone cloudflareZone = CloudflareZones.GetValueOrDefault(GetRootDomain(domain));
 
             DNSRecord dnsRecord;
             try
