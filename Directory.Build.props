@@ -8,7 +8,8 @@
     -->
   <PropertyGroup>  
     <FileAlignment>512</FileAlignment>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>8.0</LangVersion>
+    <AnalysisVersion>Latest</AnalysisVersion>
   </PropertyGroup>
 
   <!-- include Ken Christensen in all assemblies -->
