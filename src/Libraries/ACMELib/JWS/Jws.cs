@@ -3,8 +3,8 @@
     using System;
     using System.Security.Cryptography;
     using System.Text;
-    using Kenc.ACMELib.ACMEEntities;
-    using Newtonsoft.Json;
+    using System.Text.Json;
+    using Kenc.ACMELib.ACMEObjects;
 
     /// <summary>
     /// Class implementing Json Web Signature, https://tools.ietf.org/html/rfc7515
@@ -47,8 +47,8 @@
 
             var message = new JwsMessage
             {
-                Payload = Utilities.Base64UrlEncoded(JsonConvert.SerializeObject(payload)),
-                Protected = Utilities.Base64UrlEncoded(JsonConvert.SerializeObject(protectedHeader))
+                Payload = Utilities.Base64UrlEncoded(JsonSerializer.Serialize(payload)),
+                Protected = Utilities.Base64UrlEncoded(JsonSerializer.Serialize(protectedHeader))
             };
 
             message.Signature = Utilities.Base64UrlEncoded(

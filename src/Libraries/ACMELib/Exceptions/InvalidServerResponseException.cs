@@ -8,15 +8,6 @@
     public class InvalidServerResponseException : Exception
     {
         /// <summary>
-        /// The string response from the server.
-        /// </summary>
-        public string Response
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// The URI requested when the response was received.
         /// </summary>
         public Uri RequestUri
@@ -31,9 +22,8 @@
         /// <param name="request">Type of request.</param>
         /// <param name="response">Response message.</param>
         /// <param name="requestUri">Uri of request.</param>
-        public InvalidServerResponseException(string request, string response, Uri requestUri) : base($"Invalid response from server during {request}.")
+        public InvalidServerResponseException(string request, Uri requestUri) : base($"Invalid response from server during {request}.")
         {
-            Response = response;
             RequestUri = requestUri;
         }
     }

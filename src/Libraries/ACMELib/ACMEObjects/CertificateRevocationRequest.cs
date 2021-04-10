@@ -1,16 +1,16 @@
-﻿namespace Kenc.ACMELib.ACMEEntities
+﻿namespace Kenc.ACMELib.ACMEObjects
 {
-    using Newtonsoft.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Describes a certificate revocation request in the ACME protocol.
     /// </summary>
     public class CertificateRevocationRequest
     {
-        [JsonProperty("certificate")]
+        [JsonPropertyName("certificate")]
         public string Certificate { get; set; }
 
-        [JsonProperty("reason")]
+        [JsonPropertyName("reason")]
         public RevocationReason Reason { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace Kenc.ACMELib.JsonWebSignature
 {
     using System;
-    using Newtonsoft.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Class implementing Jose Header https://tools.ietf.org/html/rfc7515#page-9
@@ -24,21 +24,19 @@
             Nonce = nonce;
         }
 
-        [JsonProperty("alg")]
+        [JsonPropertyName("alg")]
         public string Algorithm { get; set; }
 
-        [JsonProperty("jwk")]
+        [JsonPropertyName("jwk")]
         public Jwk Key { get; set; }
 
-
-        [JsonProperty("kid")]
+        [JsonPropertyName("kid")]
         public string KeyId { get; set; }
 
-
-        [JsonProperty("nonce")]
+        [JsonPropertyName("nonce")]
         public string Nonce { get; set; }
 
-        [JsonProperty("url")]
+        [JsonPropertyName("url")]
         public Uri Url { get; set; }
     }
 }

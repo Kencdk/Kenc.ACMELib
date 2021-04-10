@@ -9,7 +9,7 @@
     /// <summary>
     /// Based on https://stackoverflow.com/questions/3404421/password-masking-console-application
     /// </summary>
-    class PasswordInput
+    internal class PasswordInput
     {
         private enum StdHandle
         {
@@ -25,7 +25,6 @@
 
         private const int ENTER = 13, BACKSP = 8, CTRLBACKSP = 127;
         private static readonly int[] Filtered = { 0, 27 /* escape */, 9 /*tab*/, 10 /* line feed */ };
-
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr GetStdHandle(StdHandle nStdHandle);

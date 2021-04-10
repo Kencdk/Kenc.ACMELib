@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace Kenc.ACMELib.ACMEResponses
+﻿namespace Kenc.ACMELib.ACMEResponses
 {
+    using System;
+
     /// <summary>
     /// Interface used to describe responses that contains a location property.
     /// </summary>

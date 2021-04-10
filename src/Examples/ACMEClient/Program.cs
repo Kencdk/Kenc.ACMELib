@@ -5,12 +5,13 @@
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Net.Http;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
     using Kenc.ACMELib;
-    using Kenc.ACMELib.ACMEEntities;
+    using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.Exceptions;
     using Kenc.ACMELib.Exceptions.API;
@@ -46,7 +47,7 @@
 
             var rsaKey = RSA.Create(rsaCryptoServiceProvider.ExportParameters(true));
 
-            var acmeClient = new ACMEClient(ACMEEnvironment.StagingV2, rsaKey, new RestClientFactory());
+            var acmeClient = new ACMEClient(new Uri(ACMEEnvironment.StagingV2), rsaKey, new HttpClient());
             ACMEDirectory directory = await acmeClient.InitializeAsync();
 
             Account account = null;
@@ -127,7 +128,7 @@
                     catch (ACMEException exception)
                     {
                         Console.WriteLine(exception.Message);
-                        throw exception;
+                        throw;
                     }
                 }
                 Console.WriteLine("Completed");

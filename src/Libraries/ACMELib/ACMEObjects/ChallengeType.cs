@@ -1,4 +1,4 @@
-﻿namespace Kenc.ACMELib.ACMEEntities
+﻿namespace Kenc.ACMELib.ACMEObjects
 {
     /// <summary>
     /// Available challenge types in the ACME protocol.

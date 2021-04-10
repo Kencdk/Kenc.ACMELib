@@ -8,7 +8,6 @@
     {
         public AccountDoesNotExistException(int status, string detail) : base(status, detail)
         {
-
         }
     }
 }

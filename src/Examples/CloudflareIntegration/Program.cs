@@ -5,13 +5,13 @@
     using System.IO;
     using System.Threading.Tasks;
     using CommandLine;
-    using Kenc.ACMELib.ACMEEntities;
+    using Kenc.ACMELib.ACMEObjects;
 
-    class Program
+    internal class Program
     {
-        static Options options;
+        private static Options options;
 
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine("Kenc.ACMEClient example");
             Console.WriteLine("USE AT OWN RISK");
@@ -24,7 +24,7 @@
               .WithNotParsed(HandleParseError);
         }
 
-        static async Task RunOptions(Options options)
+        private static async Task RunOptions(Options options)
         {
             if (!string.IsNullOrEmpty(options.Key) && !File.Exists(options.Key))
             {
@@ -42,7 +42,7 @@
             await orderDomains.RetrieveCertificates(order);
         }
 
-        static void HandleParseError(IEnumerable<Error> errs)
+        private static void HandleParseError(IEnumerable<Error> errs)
         {
             //handle errors
         }

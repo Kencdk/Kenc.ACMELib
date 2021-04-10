@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.Exceptions.API;
 
@@ -11,7 +12,7 @@
     /// </summary>
     public static class ExceptionHelper
     {
-        private static readonly List<Type> KnownExceptions = new List<Type>
+        private static readonly List<Type> KnownExceptions = new()
         {
             typeof(AccountDoesNotExistException),
             typeof(BadCSRException),
@@ -48,9 +49,9 @@
                 throw new ArgumentNullException(nameof(problem));
             }
 
-            var typeWhereAttributeMatches = KnownExceptions.Where(ke =>
+            Type typeWhereAttributeMatches = KnownExceptions.Where(ke =>
             {
-                var attribute = ke.CustomAttributes.FirstOrDefault(ca => ca.AttributeType.IsEquivalentTo(typeof(ACMEExceptionAttribute)));
+                CustomAttributeData attribute = ke.CustomAttributes.FirstOrDefault(ca => ca.AttributeType.IsEquivalentTo(typeof(ACMEExceptionAttribute)));
                 return string.Compare((string)attribute.ConstructorArguments[0].Value, problem.Type, comparisonType: StringComparison.OrdinalIgnoreCase) == 0;
             }).FirstOrDefault();
 
