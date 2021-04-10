@@ -1,6 +1,7 @@
 ﻿namespace Kenc.ACMELib
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -32,7 +33,8 @@
 
         private readonly Jws jws;
         private readonly string UserAgent;
-        private string nonce = string.Empty;
+
+        private readonly ConcurrentQueue<string> nonces = new ConcurrentQueue<string>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ACMERestClient"/> class.
@@ -92,7 +94,7 @@
 
             if (message != null)
             {
-                if (string.IsNullOrEmpty(nonce))
+                if (!nonces.TryDequeue(out var nonce))
                 {
                     throw new NoNonceException();
                 }
@@ -125,7 +127,11 @@
 
             if (response.Headers.AllKeys.Contains("Replay-Nonce"))
             {
-                nonce = response.Headers.GetValues("Replay-Nonce").First();
+                var nonce = response.Headers.GetValues("Replay-Nonce").First();
+                if (!string.IsNullOrWhiteSpace(nonce))
+                {
+                    nonces.Enqueue(nonce);
+                }
             }
 
             var responseBody = string.Empty;
