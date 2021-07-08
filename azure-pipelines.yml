@@ -1,0 +1,78 @@
+# pipeline for building Kenc.ACMELib.
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+   major: 1
+   minor: 0
+   beta: true
+   solution: '**/*.sln'
+   buildConfiguration: 'Release'
+
+stages:
+
+# Versioning builds
+
+- stage:
+  displayName: Build_Master_Version_Number
+  jobs:
+  - job: Build_Master_Version_Number
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+       patch: $[counter(variables['minor'], 0)]
+    steps:
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor).$(patch)"
+           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
+        condition: ne(variables['beta'], true)
+        name: SetMasterBuildName
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor).$(patch)-beta"
+           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
+        condition: eq(variables['beta'], true)
+        name: SetMasterBuildNameBeta
+  - job: Build_Branch_Version_Number
+    condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+       prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
+       brpatch: $[counter(variables['build.sourcebranchname'], 0)]
+    steps:
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor)-PullRequest.$(prpatch)"
+           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+        name: SetPRBuildName
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
+           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        name: SetBranchBuildName
+
+# Stage for building application
+
+- stage: Build_Steps
+  displayName: Build_Steps
+  condition: always()
+  jobs:  
+  - job: Build_Steps
+    displayName: Build_Steps
+    steps:
+    - script: dotnet restore $(solution)
+      name: dotnet_restore
+    - script: "dotnet build $(solution) -c $(BuildConfiguration) /p:version=$(Build.BuildNumber) /p:assemblyversion=$(assemblyVersionStr)"
+      name:  dotnet_build
+    - script: "dotnet test $(solution)"
+      name:  dotnet_test
+    - task: CopyFiles@2
+      inputs:
+        Contents: 'drops/$(BuildConfiguration)/**/**'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
