@@ -1,9 +1,8 @@
-﻿namespace Kenc.ACMELib.ACMEEntities
+﻿namespace Kenc.ACMELib.ACMEObjects
 {
     using System;
+    using System.Text.Json.Serialization;
     using Kenc.ACMELib.ACMEResponses;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Describes an order in the ACME protocol.
@@ -13,32 +12,32 @@
         [JsonIgnore]
         public Uri Location { get; set; }
 
-        [JsonProperty("status")]
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonPropertyName("status")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ACMEStatus Status { get; set; }
 
-        [JsonProperty("expires")]
+        [JsonPropertyName("expires")]
         public DateTime? Expires { get; set; }
 
-        [JsonProperty("identifiers")]
+        [JsonPropertyName("identifiers")]
         public OrderIdentifier[] Identifiers { get; set; }
 
-        [JsonProperty("notBefore")]
+        [JsonPropertyName("notBefore")]
         public DateTime? NotBefore { get; set; }
 
-        [JsonProperty("notAfter")]
+        [JsonPropertyName("notAfter")]
         public DateTime? NotAfter { get; set; }
 
-        [JsonProperty("error")]
+        [JsonPropertyName("error")]
         public Problem Error { get; set; }
 
-        [JsonProperty("authorizations")]
+        [JsonPropertyName("authorizations")]
         public Uri[] Authorizations { get; set; }
 
-        [JsonProperty("finalize")]
+        [JsonPropertyName("finalize")]
         public Uri Finalize { get; set; }
 
-        [JsonProperty("certificate")]
+        [JsonPropertyName("certificate")]
         public Uri Certificate { get; set; }
     }
 }

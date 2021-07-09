@@ -1,6 +1,6 @@
 ﻿namespace ACMEClientExample
 {
-    enum ChallengeType
+    internal enum ChallengeType
     {
         DNS,
         HTTP,

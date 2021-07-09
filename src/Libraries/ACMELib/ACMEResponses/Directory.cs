@@ -1,35 +1,38 @@
 ﻿namespace Kenc.ACMELib.ACMEResponses
 {
     using System;
-    using Newtonsoft.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Describes a directory in the ACME protocol.
     /// </summary>
     public class ACMEDirectory
     {
-        [JsonProperty("keyChange")]
+        [JsonPropertyName("keyChange")]
         public Uri KeyChange { get; set; }
 
-        [JsonProperty("newNonce")]
+        [JsonPropertyName("newNonce")]
         public Uri NewNonce { get; set; }
 
-        [JsonProperty("newAccount")]
+        [JsonPropertyName("newAccount")]
         public Uri NewAccount { get; set; }
 
-        [JsonProperty("newOrder")]
+        [JsonPropertyName("newOrder")]
         public Uri NewOrder { get; set; }
 
-        [JsonProperty("revokeCert")]
+        [JsonPropertyName("newAuthz")]
+        public Uri NewAuthz { get; set; }
+
+        [JsonPropertyName("revokeCert")]
         public Uri RevokeCertificate { get; set; }
 
-        [JsonProperty("meta")]
+        [JsonPropertyName("meta")]
         public DirectoryMeta Meta { get; set; }
     }
 
     public class DirectoryMeta
     {
-        [JsonProperty("termsOfService")]
+        [JsonPropertyName("termsOfService")]
         public string TermsOfService { get; set; }
     }
 }

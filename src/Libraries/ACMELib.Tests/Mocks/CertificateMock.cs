@@ -2,7 +2,7 @@
 {
     using System.Security.Cryptography.X509Certificates;
 
-    class CertificateMock : X509Certificate2
+    internal class CertificateMock : X509Certificate2
     {
         private readonly string publicKeyString;
 

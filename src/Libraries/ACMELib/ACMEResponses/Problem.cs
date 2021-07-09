@@ -1,19 +1,19 @@
 ﻿namespace Kenc.ACMELib.ACMEResponses
 {
-    using Newtonsoft.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Describes a problem in the ACME protocol.
     /// </summary>
     public class Problem
     {
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("detail")]
+        [JsonPropertyName("detail")]
         public string Detail { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public int Status { get; set; }
 
         public string RawJson { get; set; }

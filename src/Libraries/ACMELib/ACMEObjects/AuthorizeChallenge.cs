@@ -1,13 +1,13 @@
-﻿namespace Kenc.ACMELib.ACMEEntities
+﻿namespace Kenc.ACMELib.ACMEObjects
 {
-    using Newtonsoft.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Describes an authorize challenge in the ACME protocol.
     /// </summary>
     public class AuthorizeChallenge
     {
-        [JsonProperty("keyAuthorization")]
+        [JsonPropertyName("keyAuthorization")]
         public string KeyAuthorization { get; set; }
     }
 }

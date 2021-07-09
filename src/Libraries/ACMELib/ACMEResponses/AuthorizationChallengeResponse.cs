@@ -1,29 +1,28 @@
 ﻿namespace Kenc.ACMELib.ACMEResponses
 {
     using System;
-    using Kenc.ACMELib.ACMEEntities;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
+    using System.Text.Json.Serialization;
+    using Kenc.ACMELib.ACMEObjects;
 
     /// <summary>
     /// Describes an authorization challenge response in the ACME protocol.
     /// </summary>
     public class AuthorizationChallengeResponse : ILocationResponse
     {
-        [JsonProperty("identifier")]
+        [JsonPropertyName("identifier")]
         public OrderIdentifier Identifier { get; set; }
 
-        [JsonProperty("status")]
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonPropertyName("status")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ACMEStatus Status { get; set; }
 
-        [JsonProperty("expires")]
+        [JsonPropertyName("expires")]
         public DateTime? Expires { get; set; }
 
-        [JsonProperty("wildcard")]
+        [JsonPropertyName("wildcard")]
         public bool Wildcard { get; set; }
 
-        [JsonProperty("challenges")]
+        [JsonPropertyName("challenges")]
         public AuthorizationChallenge[] Challenges { get; set; }
 
         [JsonIgnore]

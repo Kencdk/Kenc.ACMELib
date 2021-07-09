@@ -1,45 +1,44 @@
-﻿namespace Kenc.ACMELib.ACMEEntities
+﻿namespace Kenc.ACMELib.ACMEObjects
 {
     using System;
+    using System.Text.Json.Serialization;
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.JsonWebSignature;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Describes an account in the ACME protocol.
     /// </summary>
     public class Account : ILocationResponse
     {
-        [JsonProperty("termsOfServiceAgreed")]
+        [JsonPropertyName("termsOfServiceAgreed")]
         public bool TermsOfServiceAgreed { get; set; }
 
-        [JsonProperty("contact")]
+        [JsonPropertyName("contact")]
         public string[] Contacts { get; set; }
 
-        [JsonProperty("status")]
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonPropertyName("status")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ACMEStatus Status { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("createdAt")]
+        [JsonPropertyName("createdAt")]
         public DateTime CreatedAt { get; set; }
 
-        [JsonProperty("key")]
+        [JsonPropertyName("key")]
         public Jwk Key { get; set; }
 
-        [JsonProperty("initialIp")]
+        [JsonPropertyName("initialIp")]
         public string InitialIp { get; set; }
 
-        [JsonProperty("orders")]
+        [JsonPropertyName("orders")]
         public Uri Orders { get; set; }
 
         [JsonIgnore]
         public Uri Location { get; set; }
 
-        [JsonProperty("onlyReturnExisting")]
+        [JsonPropertyName("onlyReturnExisting")]
         public bool OnlyReturnExisting { get; set; }
     }
 }

@@ -13,7 +13,7 @@
     using DnsClient;
     using DnsClient.Protocol;
     using Kenc.ACMELib;
-    using Kenc.ACMELib.ACMEEntities;
+    using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.Exceptions.API;
     using Kenc.Cloudflare.Core.Clients;
@@ -33,6 +33,7 @@
         private ACMEDirectory acmeDirectory;
 
         private Dictionary<string, Zone> CloudflareZones;
+
         public OrderDomains(Options options)
         {
             this.options = options;
@@ -61,9 +62,9 @@
 
             var rsaKey = RSA.Create(rsaCryptoServiceProvider.ExportParameters(true));
             acmeClient = new ACMEClient(
-                options.Environment == AcmeEnvironment.ProductionV2 ? ACMEEnvironment.ProductionV2 : ACMEEnvironment.StagingV2,
+                new Uri(options.Environment == AcmeEnvironment.ProductionV2 ? ACMEEnvironment.ProductionV2 : ACMEEnvironment.StagingV2),
                 rsaKey,
-                new RestClientFactory());
+                new HttpClient());
         }
 
         public async Task ValidateCloudflareConnection()
@@ -89,7 +90,7 @@
         public async Task ValidateACMEConnection()
         {
             acmeDirectory = await acmeClient.InitializeAsync();
-            Kenc.ACMELib.ACMEEntities.Account account = null;
+            Kenc.ACMELib.ACMEObjects.Account account = null;
             if (!string.IsNullOrEmpty(options.Key))
             {
                 Console.WriteLine("Validating if user exists with existing key");
@@ -132,6 +133,16 @@
 
         public async Task<Order> ValidateDomains()
         {
+            if (acmeDirectory.NewAuthz != null)
+            {
+                Console.WriteLine("Target CA supports NewAuthz");
+                Task<AuthorizationChallengeResponse>[] preAuthorizationChallenges = options.Domains.Where(x => !x.StartsWith("*"))
+                    .Select(x => NewAuthorizationAsync(acmeClient, x))
+                    .ToArray();
+
+                AuthorizationChallengeResponse[] challengeResponses = await Task.WhenAll(preAuthorizationChallenges);
+            }
+
             IEnumerable<OrderIdentifier> domains = options.Domains.Select(domain => new OrderIdentifier { Type = ChallengeType.DNSChallenge, Value = domain });
             Order order = await NewOrderAsync(acmeClient, domains);
 
@@ -282,6 +293,11 @@
         {
             Order result = await acmeClient.OrderAsync(domains);
             return result;
+        }
+
+        private static async Task<AuthorizationChallengeResponse> NewAuthorizationAsync(ACMEClient acmeClient, string domain)
+        {
+            return await acmeClient.NewAuthorizationAsync(domain);
         }
 
         private static async Task<IEnumerable<AuthorizationChallengeResponse>> RetrieveAuthz(ACMEClient acmeClient, Uri[] uris)

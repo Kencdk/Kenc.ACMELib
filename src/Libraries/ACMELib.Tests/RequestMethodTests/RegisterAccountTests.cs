@@ -1,13 +1,12 @@
 namespace ACMELibCore.Test.RequestMethodTests
 {
     using System;
-    using System.Threading;
+    using System.Net;
     using System.Threading.Tasks;
-    using Kenc.ACMELib.ACMEEntities;
-    using Kenc.ACMELib.ACMEResponses;
+    using Kenc.ACMELib;
+    using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.Exceptions;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Moq;
 
     [TestClass]
     public class RegisterAccountTests
@@ -15,63 +14,37 @@ namespace ACMELibCore.Test.RequestMethodTests
         [TestMethod]
         public async Task ValidateRegisterAsyncPositiveFlow()
         {
-            var testSystem = new TestSystem().WithDirectoryResponse();
-            var (acmeClient, restClient) = testSystem.Build();
-
             var testContacts = new[] { "mailto:test@test.invalid", "+1 012-3456-789" };
             var returnAccount = new Account { };
-            restClient.Setup(rc => rc.PostAsync<Account>(TestHelpers.acmeDirectory.NewAccount, It.IsAny<Account>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult((returnAccount, string.Empty)));
+
+            TestSystem testSystem = new TestSystem()
+                .WithDirectoryResponse()
+                .WithResponse(TestHelpers.AcmeDirectory.NewAccount, returnAccount, locationHeader: new Uri(TestHelpers.BaseUri, "/account/1234"));
+            (ACMEClient acmeClient, _) = testSystem.Build();
 
             await acmeClient.RegisterAsync(testContacts);
 
+            /*
             restClient.Verify(rc => rc.PostAsync<Account>(TestHelpers.acmeDirectory.NewAccount,
                 It.Is<Account>(req => req.Contacts == testContacts && req.TermsOfServiceAgreed),
                 It.IsAny<CancellationToken>()), Times.Once, "Rest Client wasn't called with expected parameters.");
 
             restClient.Verify(rc => rc.GetAsync<ACMEDirectory>(new Uri(TestHelpers.baseUri, "directory"), It.IsAny<CancellationToken>()),
-                Times.Once, "Rest Client wasn't called with expected parameters.");
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(InvalidServerResponseException))]
-        public async Task ValidateRegisterAsyncThrowsInvalidServerResponseForBadResponse()
-        {
-            var testSystem = new TestSystem().WithDirectoryResponse();
-            var (acmeClient, restClient) = testSystem.Build();
-
-            var testContacts = new[] { "mailto:test@test.invalid", "+1 012-3456-789" };
-            var returnAccount = new Account { };
-            restClient.Setup(rc => rc.PostAsync<Account>(TestHelpers.acmeDirectory.NewAccount, It.IsAny<Account>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(((Account)null, string.Empty)));
-
-            await acmeClient.RegisterAsync(testContacts);
+                Times.Once, "Rest Client wasn't called with expected parameters.");*/
         }
 
         [TestMethod]
         public async Task ValidateRegisterAsyncThrowsExceptionFromRestClient()
         {
-            var testSystem = new TestSystem().WithDirectoryResponse();
-            var (acmeClient, restClient) = testSystem.Build();
+            TestSystem testSystem = new TestSystem()
+                .WithDirectoryResponse()
+                .WithErrorResponse(TestHelpers.AcmeDirectory.NewAccount, "detail", string.Empty, 1234, HttpStatusCode.BadRequest);
+            (ACMEClient acmeClient, _) = testSystem.Build();
 
             var testContacts = new[] { "mailto:test@test.invalid", "+1 012-3456-789" };
-            var returnAccount = new Account { };
-            restClient.Setup(rc => rc.PostAsync<Account>(TestHelpers.acmeDirectory.NewAccount, It.IsAny<Account>(), It.IsAny<CancellationToken>()))
-                .Throws(new ACMEException(1234, "detail"));
-
-            try
-            {
-                await acmeClient.RegisterAsync(testContacts);
-            }
-            catch (ACMEException exception)
-            {
-                Assert.AreEqual(1234, exception.Status);
-                Assert.AreEqual("detail", exception.Message);
-
-                return;
-            }
-
-            Assert.Fail("Failed to stop in catch.");
+            ACMEException exception = await Assert.ThrowsExceptionAsync<ACMEException>(() => acmeClient.RegisterAsync(testContacts));
+            Assert.AreEqual(1234, exception.Status);
+            Assert.AreEqual("detail", exception.Message);
         }
     }
 }

@@ -8,7 +8,7 @@
     -->
   <PropertyGroup>  
     <FileAlignment>512</FileAlignment>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <!-- include Ken Christensen in all assemblies -->
@@ -16,7 +16,7 @@
     <Company>Ken Christensen</Company>
     <Product>Kenc.ACMELib</Product>
     <Authors>Ken Christensen</Authors>
-    <Copyright>© 2019 Ken Christensen. All rights reserved.</Copyright>
+    <Copyright>© 2021 Ken Christensen. All rights reserved.</Copyright>
   </PropertyGroup>
 
   <!-- Saving some paths that are used elsewhere in MSBuild settings and targets -->
@@ -27,11 +27,11 @@
     <EnlistmentRoot Condition="!HasTrailingSlash('$(EnlistmentRoot)')">$(EnlistmentRoot)\</EnlistmentRoot>
     <MSBuildOverrides>$(MSBuildToolsPath)</MSBuildOverrides>
     
-    <!-- setup intermediate folder to be root\Intermedia\ with unique subfolder paths -->
-    <IntermediateRootPath>$(EnlistmentRoot)Intermediates</IntermediateRootPath>
+    <!-- setup intermediate folder to be root\intermedia\ with unique subfolder paths -->
+    <IntermediateRootPath>$(EnlistmentRoot)intermediates</IntermediateRootPath>
     <IntermediateOutputPath>$(IntermediateRootPath)\$(Configuration)\$(Platform)\$(OutputSubdir)</IntermediateOutputPath>
 
-    <OutputRootPath>$(EnlistmentRoot)Drops</OutputRootPath>
+    <OutputRootPath>$(EnlistmentRoot)drops</OutputRootPath>
     <OutputPath>$(OutputRootPath)\$(Configuration)\$(Platform)\$(OutputSubdir)</OutputPath>
 
     <!-- Add generated xml documentation files to packaged project output -->

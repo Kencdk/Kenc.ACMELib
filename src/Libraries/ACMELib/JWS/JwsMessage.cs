@@ -1,22 +1,22 @@
 ﻿namespace Kenc.ACMELib.JsonWebSignature
 {
-    using Newtonsoft.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Class implementing Jws messages.
     /// </summary>
     public class JwsMessage
     {
-        [JsonProperty("header")]
+        [JsonPropertyName("header")]
         public JwsHeader Header { get; set; }
 
-        [JsonProperty("protected")]
+        [JsonPropertyName("protected")]
         public string Protected { get; set; }
 
-        [JsonProperty("payload")]
+        [JsonPropertyName("payload")]
         public string Payload { get; set; }
 
-        [JsonProperty("signature")]
+        [JsonPropertyName("signature")]
         public string Signature { get; set; }
     }
 }

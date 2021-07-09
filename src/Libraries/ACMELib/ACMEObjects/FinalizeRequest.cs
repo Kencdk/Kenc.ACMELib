@@ -1,13 +1,13 @@
-﻿namespace Kenc.ACMELib.ACMEEntities
+﻿namespace Kenc.ACMELib.ACMEObjects
 {
-    using Newtonsoft.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Describes a finalize request in the ACME protocol.
     /// </summary>
     public class FinalizeRequest
     {
-        [JsonProperty("csr")]
+        [JsonPropertyName("csr")]
         public string CSR { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace ACMEClientExample
 {
-    enum AcmeEnvironment
+    internal enum AcmeEnvironment
     {
         StagingV2,
         ProductionV2

@@ -6,7 +6,7 @@
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
-    using Kenc.ACMELib.ACMEEntities;
+    using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.ACMEResponses;
 
     /// <summary>
@@ -110,5 +110,13 @@
         /// <param name="cancellationToken">Cancellation token for the async request.</param>
         /// <returns>A <see cref="Account"/> record if one exists.</returns>
         Task<Account> GetAccountAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Creates a new pre-authorization
+        /// </summary>
+        /// <param name="domain">Target domain.</param>
+        /// <param name="cancellationToken">Cancellation token for the async request.</param>
+        /// <returns><see cref="AuthorizationChallengeResponse"/></returns>
+        Task<AuthorizationChallengeResponse> NewAuthorizationAsync(string domain, CancellationToken cancellationToken = default);
     }
 }
