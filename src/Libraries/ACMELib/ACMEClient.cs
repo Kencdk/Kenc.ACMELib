@@ -3,7 +3,11 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+#if DEBUG
     using System.Diagnostics;
+#else
+    using System.IO;
+#endif
     using System.Linq;
     using System.Net.Http;
     using System.Reflection;
