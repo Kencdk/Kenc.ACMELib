@@ -68,12 +68,17 @@ stages:
       name: dotnet_restore
     - script: "dotnet build $(solution) -c $(BuildConfiguration) /p:version=$(Build.BuildNumber) /p:assemblyversion=$(assemblyVersionStr)"
       name:  dotnet_build
-    - script: "dotnet test $(solution)"
+    - script: "dotnet test $(solution) --logger trx"
       name:  dotnet_test
     - task: CopyFiles@2
       inputs:
         Contents: 'drops/$(BuildConfiguration)/**/**'
         TargetFolder: '$(build.artifactstagingdirectory)'
+    - task: PublishTestResults@2
+      inputs:
+        testRunner: VSTest
+        testResultsFiles: 'src/**/*.trx'
+        failTaskOnFailedTests: true
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
