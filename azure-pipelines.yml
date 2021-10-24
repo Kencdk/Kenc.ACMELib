@@ -18,10 +18,10 @@ stages:
 # Versioning builds
 
 - stage:
-  displayName: Build_Master_Version_Number
+  displayName: Build_Main_Version_Number
   jobs:
-  - job: Build_Master_Version_Number
-    timeoutInMinutes: 10 # how long to run the job before automatically cancelling
+  - job: Build_Main_Version_Number
+    timeoutInMinutes: 1 # how long to run the job before automatically cancelling
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
        patch: $[counter(variables['minor'], 0)]
@@ -30,12 +30,12 @@ stages:
            echo "##vso[build.updatebuildnumber]$(major).$(minor).$(patch)"
            echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
         condition: ne(variables['beta'], true)
-        name: SetMasterBuildName
+        name: SetMainBuildName
       - bash: |
            echo "##vso[build.updatebuildnumber]$(major).$(minor).$(patch)-beta"
            echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
         condition: eq(variables['beta'], true)
-        name: SetMasterBuildNameBeta
+        name: SetMainBuildNameBeta
   - job: Build_Branch_Version_Number
     timeoutInMinutes: 10 # how long to run the job before automatically cancelling
     condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -45,12 +45,12 @@ stages:
     steps:
       - bash: |
            echo "##vso[build.updatebuildnumber]$(major).$(minor)-PullRequest.$(prpatch)"
-           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
+           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(prpatch)"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
       - bash: |
            echo "##vso[build.updatebuildnumber]$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
-           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(patch)"
+           echo "##vso[task.setvariable variable=assemblyVersionStr]$(major).$(minor).$(brpatch)"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
 
