@@ -9,7 +9,7 @@ pool:
 variables:
    major: 1
    minor: 0
-   beta: true
+   beta: ${{ variables.beta }} 
    solution: '**/*.sln'
    buildConfiguration: 'Release'
 
