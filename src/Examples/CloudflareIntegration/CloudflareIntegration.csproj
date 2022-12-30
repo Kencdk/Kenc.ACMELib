@@ -2,14 +2,15 @@
   <Sdk Name="Microsoft.Build.CentralPackageVersions" Version="2.0.79" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <LangVersion>9.0</LangVersion>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" />
     <PackageReference Include="DnsClient" />
     <PackageReference Include="Kenc.Cloudflare" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,7 +14,7 @@
     internal class TestSystem
     {
         private RSA rsaKey;
-        private readonly Mock<HttpClient> restClient = new Mock<HttpClient>();
+        private readonly Mock<HttpClient> restClient = new();
 
         public TestSystem()
         {
@@ -70,10 +70,7 @@
 
         public (ACMEClient, Mock<HttpClient>) Build()
         {
-            if (rsaKey == null)
-            {
-                rsaKey = RSA.Create();
-            }
+            rsaKey ??= RSA.Create();
 
             var acmeClient = new ACMEClient(TestHelpers.BaseUri, rsaKey, restClient.Object);
             return (acmeClient, restClient);

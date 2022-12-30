@@ -8,7 +8,7 @@
 
     public class TestHttpMessageHandler : HttpMessageHandler
     {
-        private Dictionary<Uri, Func<HttpRequestMessage, HttpResponseMessage>> responses = new Dictionary<Uri, Func<HttpRequestMessage, HttpResponseMessage>>();
+        private readonly Dictionary<Uri, Func<HttpRequestMessage, HttpResponseMessage>> responses = new();
 
         public virtual HttpResponseMessage Send(HttpRequestMessage request)
         {
@@ -17,9 +17,9 @@
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (responses.ContainsKey(request.RequestUri))
+            if (responses.TryGetValue(request.RequestUri, out Func<HttpRequestMessage, HttpResponseMessage> value))
             {
-                var result = responses[request.RequestUri].Invoke(request);
+                HttpResponseMessage result = value.Invoke(request);
                 return Task.FromResult(result);
             }
 
@@ -32,7 +32,9 @@
             return this;
         }
 
+#pragma warning disable IDE0060 // Remove unused parameter
         public TestHttpMessageHandler WithDirectory(Uri uri)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             return this;
         }

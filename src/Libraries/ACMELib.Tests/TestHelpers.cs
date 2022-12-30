@@ -13,10 +13,10 @@
 
     public static class TestHelpers
     {
-        public static Uri BaseUri = new Uri("https://acmetest.invalid");
-        public static Uri DirectoryUri = new Uri(BaseUri, "directory");
+        public static readonly Uri BaseUri = new("https://acmetest.invalid");
+        public static readonly Uri DirectoryUri = new(BaseUri, "directory");
 
-        public static ACMEDirectory AcmeDirectory = new ACMEDirectory
+        public static readonly ACMEDirectory AcmeDirectory = new()
         {
             KeyChange = new Uri(BaseUri, "keyChange"),
             Meta = new DirectoryMeta
