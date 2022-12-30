@@ -9,7 +9,7 @@
     /// <summary>
     /// Based on https://stackoverflow.com/questions/3404421/password-masking-console-application
     /// </summary>
-    internal class PasswordInput
+    internal partial class PasswordInput
     {
         private enum StdHandle
         {
@@ -26,16 +26,16 @@
         private const int ENTER = 13, BACKSP = 8, CTRLBACKSP = 127;
         private static readonly int[] Filtered = { 0, 27 /* escape */, 9 /*tab*/, 10 /* line feed */ };
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GetStdHandle(StdHandle nStdHandle);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        private static partial IntPtr GetStdHandle(StdHandle nStdHandle);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out int lpMode);
+        private static partial bool GetConsoleMode(IntPtr hConsoleHandle, out int lpMode);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetConsoleMode(IntPtr hConsoleHandle, int dwMode);
+        private static partial bool SetConsoleMode(IntPtr hConsoleHandle, int dwMode);
 
         public static SecureString ReadPassword()
         {

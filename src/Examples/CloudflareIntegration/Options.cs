@@ -22,5 +22,8 @@
 
         [Option('k', "key", Required = false, HelpText = "RSA key to use for authenticating with ACME")]
         public string Key { get; set; }
+
+        [Option('f', "format", Required = false, HelpText = "Format to export certificate as.")]
+        public CertificateExportFormat ExportFormat { get; set; } = CertificateExportFormat.PFX;
     }
 }

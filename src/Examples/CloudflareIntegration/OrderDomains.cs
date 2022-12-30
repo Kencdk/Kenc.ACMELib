@@ -9,6 +9,7 @@
     using System.Net.Http;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
+    using System.Text;
     using System.Threading.Tasks;
     using DnsClient;
     using DnsClient.Protocol;
@@ -16,10 +17,12 @@
     using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.ACMEResponses;
     using Kenc.ACMELib.Exceptions.API;
+    using Kenc.Cloudflare.Core;
     using Kenc.Cloudflare.Core.Clients;
     using Kenc.Cloudflare.Core.Clients.Enums;
     using Kenc.Cloudflare.Core.Entities;
     using Kenc.Cloudflare.Core.Exceptions;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -36,13 +39,21 @@
 
         public OrderDomains(Options options)
         {
+            var cfgBuilder = new ConfigurationBuilder();
+            cfgBuilder.AddInMemoryCollection(new Dictionary<string, string>
+            {
+                ["Username"] = options.Username,
+                ["ApiKey"] = options.ApiKey,
+                ["Endpoint"] = CloudflareAPIEndpoint.V4Endpoint.ToString(),
+            });
+            IConfiguration cfg = cfgBuilder.Build();
+
             this.options = options;
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddHttpClient();
+            serviceCollection.AddCloudflareClient(cfg);
             ServiceProvider services = serviceCollection.BuildServiceProvider();
-            IHttpClientFactory httpClientFactory = services.GetRequiredService<System.Net.Http.IHttpClientFactory>();
-            cloudflareClient = new CloudflareClientFactory(options.Username, options.ApiKey, new CloudflareRestClientFactory(httpClientFactory), CloudflareAPIEndpoint.V4Endpoint)
-                .Create();
+            cloudflareClient = services.GetRequiredService<ICloudflareClient>();
 
             // RSA service provider
             var rsaCryptoServiceProvider = new RSACryptoServiceProvider(2048);
@@ -74,16 +85,23 @@
                 .ToList();
 
             // list all zones.
-            IList<Zone> cloudflareZones = await cloudflareClient.Zones.ListAsync();
-
-            CloudflareZones = cloudflareZones.Where(x => cleanedupDomains.Contains(x.Name, StringComparer.OrdinalIgnoreCase))
-                .ToDictionary(x => x.Name, x => x);
-
-            var missingDomains = cleanedupDomains.Except(CloudflareZones.Keys, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            if (missingDomains.Any())
+            try
             {
-                throw new Exception($"The following domains are not accesible in the cloudflare account. {string.Join(',', missingDomains)}");
+                IList<Zone> cloudflareZones = await cloudflareClient.Zones.ListAsync();
+
+                CloudflareZones = cloudflareZones.Where(x => cleanedupDomains.Contains(x.Name, StringComparer.OrdinalIgnoreCase))
+                    .ToDictionary(x => x.Name, x => x);
+
+                var missingDomains = cleanedupDomains.Except(CloudflareZones.Keys, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (missingDomains.Any())
+                {
+                    throw new Exception($"The following domains are not accesible in the cloudflare account. {string.Join(',', missingDomains)}");
+                }
+            }
+            catch (CloudflareException ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
@@ -264,13 +282,55 @@
             // combine the two!
             X509Certificate2 properCert = cert.CopyWithPrivateKey(certKey);
 
-            Program.LogLine("Enter password to secure PFX");
-            System.Security.SecureString password = PasswordInput.ReadPassword();
-            var pfxData = properCert.Export(X509ContentType.Pfx, password);
+            // do we export as PFX or PEM/KEY format?
+            if (options.ExportFormat == CertificateExportFormat.PFX)
+            {
+                Program.LogLine("Enter password to secure PFX");
+                System.Security.SecureString password = PasswordInput.ReadPassword();
+                var pfxData = properCert.Export(X509ContentType.Pfx, password);
 
-            var privateKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.pfx";
-            File.WriteAllBytes(privateKeyFilename, pfxData);
-            Program.LogLine($"Private certificate written to file {privateKeyFilename}");
+                var privateKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.pfx";
+                await File.WriteAllBytesAsync(privateKeyFilename, pfxData);
+                Program.LogLine($"Private certificate written to file {privateKeyFilename}");
+            }
+            else if (options.ExportFormat == CertificateExportFormat.PEM)
+            {
+                var certificateBytes = cert.RawData;
+                var certificatePem = PemEncoding.Write("CERTIFICATE", certificateBytes);
+                var privKeyBytes = certKey.ExportPkcs8PrivateKey();
+                var privKeyPem = PemEncoding.Write("PRIVATE KEY", privKeyBytes);
+
+                var privateKeyFilename = $"{FixFilename(certOrder.Identifiers[0].Value)}.key.pem";
+                await File.WriteAllBytesAsync(privateKeyFilename, Encoding.ASCII.GetBytes(privKeyPem));
+
+                var certificateFileName = $"{FixFilename(certOrder.Identifiers[0].Value)}.cert.pem";
+                await File.WriteAllBytesAsync(certificateFileName, Encoding.ASCII.GetBytes(certificatePem));
+
+                // build up the certificate chain and export as well 
+                X509Chain ch = new();
+                ch.ChainPolicy.RevocationMode = X509RevocationMode.Online;
+                ch.Build(cert);
+
+                var stringBuilder = new StringBuilder();
+                foreach (X509ChainElement element in ch.ChainElements)
+                {
+                    if (element.Certificate.Thumbprint.Equals(cert.Thumbprint, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    var elementPem = PemEncoding.Write("CERTIFICATE", element.Certificate.RawData);
+                    stringBuilder.Append(elementPem);
+                    stringBuilder.AppendLine();
+                }
+
+                var certificateChainFileName = $"{FixFilename(certOrder.Identifiers[0].Value)}.chain.pem";
+                await File.WriteAllTextAsync(certificateChainFileName, stringBuilder.ToString());
+            }
+            else
+            {
+                throw new InvalidOperationException("Unsupported export format defined.");
+            }
         }
 
         /// <summary>
@@ -286,7 +346,13 @@
 
         private static string FixFilename(string filename)
         {
-            return filename.Replace("*", "");
+            filename = filename.Replace("*", "");
+            if (filename.StartsWith('.'))
+            {
+                filename = filename.Remove(0, 1);
+            }
+
+            return filename;
         }
 
         private static async Task<Order> NewOrderAsync(ACMEClient acmeClient, IEnumerable<OrderIdentifier> domains)
@@ -368,7 +434,7 @@
                 await Task.Delay(delay);
             }
 
-            throw new Exception($"Failed to validate {domainName}");
+            throw new TimeoutException($"Failed to validate {domainName}");
         }
     }
 }

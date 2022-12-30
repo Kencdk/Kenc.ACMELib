@@ -20,6 +20,8 @@
     {
         private static readonly string keyPath = "acmeuser.key";
 
+        private static readonly HttpClient httpClient = new();
+
         private static async Task Main()
         {
             Console.WriteLine("Kenc.ACMEClient example");
@@ -324,24 +326,21 @@
         private static async Task<bool> ValidateHttpChallenge(string token, string expectedValue, string domain)
         {
             var domainUrl = domain.Replace("*", "");
-            var url = $"http://{domainUrl}/.well-known/acme-challenge/{token}";
-            var httpRequest = (HttpWebRequest)HttpWebRequest.Create(url);
+            var url = new Uri($"http://{domainUrl}/.well-known/acme-challenge/{token}");
             try
             {
-                var response = (HttpWebResponse)(await httpRequest.GetResponseAsync());
+                using HttpResponseMessage response = await httpClient.GetAsync(url);
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
                     Console.WriteLine($"{url} Received unexpected status code: {response.StatusCode}");
                     return false;
                 }
 
-                using Stream stream = response.GetResponseStream();
-                using var streamReader = new StreamReader(stream);
-                var received = streamReader.ReadToEnd();
-                if (string.Compare(received, expectedValue, StringComparison.Ordinal) != 0)
+                var responseStr = await response.Content.ReadAsStringAsync();
+                if (string.Compare(responseStr, expectedValue, StringComparison.Ordinal) != 0)
                 {
                     Console.WriteLine($"{url} responded with unexpected value.");
-                    Console.WriteLine(received);
+                    Console.WriteLine(responseStr);
                     Console.WriteLine(expectedValue);
                     return false;
                 }

@@ -6,10 +6,12 @@
     {
         private readonly string publicKeyString;
 
+#pragma warning disable SYSLIB0026 // Type or member is obsolete
         public CertificateMock(string publicKeyString)
         {
             this.publicKeyString = publicKeyString;
         }
+#pragma warning restore SYSLIB0026 // Type or member is obsolete
 
         public override string GetPublicKeyString()
         {
