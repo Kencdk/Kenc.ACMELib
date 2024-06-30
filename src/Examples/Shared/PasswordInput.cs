@@ -1,4 +1,4 @@
-﻿namespace CloudflareIntegration
+﻿namespace Kenc.ACMELib.Examples.Shared
 {
     using System;
     using System.ComponentModel;
@@ -9,7 +9,7 @@
     /// <summary>
     /// Based on https://stackoverflow.com/questions/3404421/password-masking-console-application
     /// </summary>
-    internal partial class PasswordInput
+    public partial class PasswordInput
     {
         private enum StdHandle
         {
@@ -24,7 +24,7 @@
         }
 
         private const int ENTER = 13, BACKSP = 8, CTRLBACKSP = 127;
-        private static readonly int[] Filtered = { 0, 27 /* escape */, 9 /*tab*/, 10 /* line feed */ };
+        private static readonly int[] Filtered = [0, 27 /* escape */, 9 /*tab*/, 10 /* line feed */];
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         private static partial IntPtr GetStdHandle(StdHandle nStdHandle);
@@ -39,7 +39,7 @@
 
         public static SecureString ReadPassword()
         {
-            IntPtr stdInputHandle = GetStdHandle(StdHandle.Input);
+            var stdInputHandle = GetStdHandle(StdHandle.Input);
             if (stdInputHandle == IntPtr.Zero)
             {
                 throw new InvalidOperationException("No console input");
@@ -80,12 +80,9 @@
             }
 
             // reset console mode to previous
-            if (!SetConsoleMode(stdInputHandle, previousConsoleMode))
-            {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not reset console mode.");
-            }
-
-            return secureString;
+            return !SetConsoleMode(stdInputHandle, previousConsoleMode)
+                ? throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not reset console mode.")
+                : secureString;
         }
     }
 }

@@ -12,8 +12,8 @@
     /// </summary>
     public static class ExceptionHelper
     {
-        private static readonly List<Type> KnownExceptions = new()
-        {
+        private static readonly List<Type> KnownExceptions =
+        [
             typeof(AccountDoesNotExistException),
             typeof(BadCSRException),
             typeof(BadNonceException),
@@ -36,7 +36,7 @@
             typeof(UserActionRequiredException),
             typeof(BadPublicKeyException),
             typeof(OrderNotReadyException)
-        };
+        ];
 
         /// <summary>
         /// Throw an exception based on the <paramref name="problem"/>
@@ -57,7 +57,7 @@
 
             if (typeWhereAttributeMatches != null)
             {
-                throw (ACMEException)Activator.CreateInstance(typeWhereAttributeMatches, new object[] { problem.Status, problem.Detail });
+                throw (ACMEException)Activator.CreateInstance(typeWhereAttributeMatches, [problem.Status, problem.Detail]);
             }
 
             throw new ACMEException(problem.Status, problem.Detail, problem.Type);

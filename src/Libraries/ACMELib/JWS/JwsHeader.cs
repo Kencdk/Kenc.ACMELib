@@ -20,6 +20,11 @@
 
         public JwsHeader(string nonce, Uri url)
         {
+            if (string.IsNullOrEmpty(nonce))
+            {
+                throw new ArgumentNullException(nameof(nonce));
+            }
+
             Url = url;
             Nonce = nonce;
         }

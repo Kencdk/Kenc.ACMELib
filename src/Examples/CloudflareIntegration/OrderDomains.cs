@@ -16,6 +16,7 @@
     using Kenc.ACMELib;
     using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.ACMEResponses;
+    using Kenc.ACMELib.Examples.Shared;
     using Kenc.ACMELib.Exceptions.API;
     using Kenc.Cloudflare.Core;
     using Kenc.Cloudflare.Core.Clients;
@@ -62,6 +63,17 @@
                 Program.LogLine("Generating new key for ACME.");
                 var exportKey = rsaCryptoServiceProvider.ExportCspBlob(true);
                 var strKey = Convert.ToBase64String(exportKey);
+
+                if (File.Exists("acmekey.key"))
+                {
+
+                    var result = ConsoleInput.Prompt("WARNING - acmekey.key already exists - do you wish to overwrite?", ["y", "yes", "n", "no"]);
+                    if (!ConsoleInput.PositivePromptAnswers.Contains(result, StringComparer.OrdinalIgnoreCase))
+                    {
+                        // user doesn't wish to overwrite the key. Abort
+                        throw new Exception("User aborted");
+                    }
+                }
 
                 File.WriteAllText("acmekey.key", strKey);
             }
@@ -139,7 +151,7 @@
                 var userContact = Console.ReadLine();
                 try
                 {
-                    account = await acmeClient.RegisterAsync(new[] { "mailto:" + userContact });
+                    account = await acmeClient.RegisterAsync(["mailto:" + userContact]);
                 }
                 catch (Exception ex)
                 {
@@ -161,23 +173,26 @@
                 AuthorizationChallengeResponse[] challengeResponses = await Task.WhenAll(preAuthorizationChallenges);
             }
 
-            IEnumerable<OrderIdentifier> domains = options.Domains.Select(domain => new OrderIdentifier { Type = ChallengeType.DNSChallenge, Value = domain });
+            var domains = options.Domains.Select(domain => new OrderIdentifier { Type = ChallengeType.DNSChallenge, Value = domain }).ToList();
             Order order = await NewOrderAsync(acmeClient, domains);
 
             // todo: save order identifier
+            Uri location = order.Location;
             Program.LogLine($"Order location: {order.Location}");
 
+
+            // get challenge results.
             Uri[] validations = order.Authorizations;
             var dnsRecords = new List<string>(order.Authorizations.Length);
-            IEnumerable<AuthorizationChallengeResponse> auths = await RetrieveAuthz(acmeClient, validations);
-            foreach (AuthorizationChallengeResponse item in auths)
-            {
-                Program.LogLine($"Processing validations for {item.Identifier.Value}");
+            List<AuthorizationChallengeResponse> auths = await RetrieveAuthz(acmeClient, validations);
 
+            // now that we have all the authz responses - add challenges for those that needs it.
+            Task<(AuthorizationChallenge dnsChallenge, string Value)>[] dnsChallenges = auths.Select(async item =>
+            {
                 if (item.Status == ACMEStatus.Valid)
                 {
-                    Program.LogLine("Domain already validated succesfully.");
-                    continue;
+                    Program.LogLine($"{item.Identifier} already validated succesfully.");
+                    return (null, null);
                 }
 
                 AuthorizationChallenge validChallenge = item.Challenges.Where(challenge => challenge.Status == ACMEStatus.Valid).FirstOrDefault();
@@ -185,52 +200,64 @@
                 {
                     Program.LogLine("Found a valid challenge, skipping domain.", true);
                     Program.LogLine(validChallenge.Type, true);
-                    continue;
+                    return (null, null);
                 }
 
                 // limit to DNS challenges, as we can handle them with Cloudflare.
                 AuthorizationChallenge dnsChallenge = item.Challenges.FirstOrDefault(x => x.Type == "dns-01");
-                Program.LogLine($"Got challenge for {item.Identifier.Value}");
+                Program.LogLine($"Adding DNS entry for {item.Identifier.Value}");
                 var recordId = await AddDNSEntry(item.Identifier.Value, dnsChallenge.AuthorizationToken);
                 dnsRecords.Add(recordId);
 
-                // validate the DNS record is accessible.
-                await ValidateChallengeCompletion(dnsChallenge, item.Identifier.Value);
-                AuthorizationChallengeResponse c = await CompleteChallenge(acmeClient, dnsChallenge);
+                return (dnsChallenge, item.Identifier.Value);
+            }).ToArray();
 
-                while (c.Status == ACMEStatus.Pending)
-                {
-                    await Task.Delay(5000);
-                    c = await acmeClient.GetAuthorizationChallengeAsync(dnsChallenge.Url);
-                }
+            (AuthorizationChallenge dnsChallenge, string Domain)[] challenges = (await Task.WhenAll(dnsChallenges))
+                .Where(x => x.dnsChallenge is not null).ToArray();
 
-                if (c.Status == ACMEStatus.Valid)
-                {
-                    // no reason to keep going, we have one succesfull challenge!
-                    continue;
-                }
-            }
+            // foreach of the challenges - let's check if we can resolve them with DNS.
+            Task[] completionTasks = challenges.Select(async x =>
+            {
+                await ValidateChallengeCompletion(x.dnsChallenge, x.Domain);
+                await CompleteChallenge(acmeClient, x.dnsChallenge);
+            }).ToArray();
+            await Task.WhenAll(completionTasks);
 
-            var failedAuthorizations = new List<string>();
-            foreach (Uri challenge in order.Authorizations)
+            // now that we have validated that all DNS records exists AND completed the challenges - let's check if they completed succesfully
+            Task<AuthorizationChallengeResponse>[] authorizationTasks = order.Authorizations.Select(async challenge =>
             {
                 AuthorizationChallengeResponse c;
                 do
                 {
-                    await Task.Delay(5000);
                     c = await acmeClient.GetAuthorizationChallengeAsync(challenge);
+
                 }
                 while (c == null || c.Status == ACMEStatus.Pending);
 
-                if (c.Status == ACMEStatus.Invalid)
+                return c;
+            }).ToArray();
+
+            AuthorizationChallengeResponse[] authorizationResults = await Task.WhenAll(authorizationTasks);
+            IEnumerable<IGrouping<ACMEStatus, AuthorizationChallengeResponse>> groupedByStatus = authorizationResults.GroupBy(x => x.Status);
+            foreach (IGrouping<ACMEStatus, AuthorizationChallengeResponse> group in groupedByStatus)
+            {
+                Console.WriteLine(group.Key);
+                foreach (AuthorizationChallengeResponse item in group)
                 {
-                    failedAuthorizations.Add(c.Identifier.Value);
+                    Console.WriteLine(item.Identifier.Value);
                 }
             }
 
+            IEnumerable<IGrouping<ACMEStatus, AuthorizationChallengeResponse>> failedAuthorizations = groupedByStatus.Where(x => x.Key == ACMEStatus.Invalid);
             if (failedAuthorizations.Any())
             {
                 throw new Exception($"Failed to authorize the following domains {string.Join(',', failedAuthorizations)}.");
+            };
+
+            if (order.Location == null)
+            {
+                // sometimes, ACME doesn't respond with the location -.-
+                order.Location = location;
             }
 
             return order;
@@ -366,22 +393,10 @@
             return await acmeClient.NewAuthorizationAsync(domain);
         }
 
-        private static async Task<IEnumerable<AuthorizationChallengeResponse>> RetrieveAuthz(ACMEClient acmeClient, Uri[] uris)
+        private static async Task<List<AuthorizationChallengeResponse>> RetrieveAuthz(ACMEClient acmeClient, Uri[] uris)
         {
-            var challenges = new List<AuthorizationChallengeResponse>();
-            foreach (Uri uri in uris)
-            {
-                try
-                {
-                    AuthorizationChallengeResponse result = await acmeClient.GetAuthorizationChallengeAsync(uri);
-                    challenges.Add(result);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }
-            return challenges;
+            var tasks = uris.Select(x => acmeClient.GetAuthorizationChallengeAsync(x)).ToList();
+            return [.. (await Task.WhenAll(tasks))];
         }
 
         private static async Task<AuthorizationChallengeResponse> CompleteChallenge(ACMEClient acmeClient, AuthorizationChallenge challenge)
@@ -408,6 +423,11 @@
                 Program.LogLine($"The DNS entry already exists. Ignoring {domain}/{value}");
                 return string.Empty;
             }
+            catch (CloudflareException existsAlreadyException) when (existsAlreadyException.Errors[0].Code == "81058")
+            {
+                // record already exists.
+                return string.Empty;
+            }
         }
 
         private static async Task ValidateChallengeCompletion(AuthorizationChallenge challenge, string domainName)
@@ -423,7 +443,18 @@
             for (var i = 0; i < maxRetries; i++)
             {
                 var lookup = new LookupClient(IPAddress.Parse("1.1.1.1"));
-                IDnsQueryResponse result = await lookup.QueryAsync($"_acme-challenge.{domainName}", QueryType.TXT);
+                IDnsQueryResponse result;
+                try
+                {
+                    result = await lookup.QueryAsync($"_acme-challenge.{domainName}", QueryType.TXT);
+
+                }
+                catch (DnsResponseException dnsResponseException)
+                {
+                    Program.LogLine($"Exception while querying DNS: {dnsResponseException.Message}");
+                    continue;
+                }
+
                 TxtRecord record = result.Answers.TxtRecords().Where(txt => txt.Text.Contains(challenge.AuthorizationToken)).FirstOrDefault();
                 if (record != null)
                 {
