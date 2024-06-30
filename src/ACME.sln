@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kenc.ACMELibCore.Tests", "L
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudflareIntegration", "Examples\CloudflareIntegration\CloudflareIntegration.csproj", "{79B0EA59-9B39-4E97-8080-012D91BCA16B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Examples\Shared\Shared.csproj", "{887A6A88-2865-498E-BF8C-52B194295553}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{79B0EA59-9B39-4E97-8080-012D91BCA16B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79B0EA59-9B39-4E97-8080-012D91BCA16B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79B0EA59-9B39-4E97-8080-012D91BCA16B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{887A6A88-2865-498E-BF8C-52B194295553}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{887A6A88-2865-498E-BF8C-52B194295553}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{887A6A88-2865-498E-BF8C-52B194295553}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{887A6A88-2865-498E-BF8C-52B194295553}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +48,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{BD4872DB-73DF-497D-915D-C20EB4283167} = {C9A9AB54-D122-48CC-9CA7-F34BC5DB3293}
 		{79B0EA59-9B39-4E97-8080-012D91BCA16B} = {C9A9AB54-D122-48CC-9CA7-F34BC5DB3293}
+		{887A6A88-2865-498E-BF8C-52B194295553} = {C9A9AB54-D122-48CC-9CA7-F34BC5DB3293}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A7972CCF-1FB8-4419-B115-B60882F8FCF0}

@@ -13,6 +13,7 @@
     using Kenc.ACMELib;
     using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.ACMEResponses;
+    using Kenc.ACMELib.Examples.Shared;
     using Kenc.ACMELib.Exceptions;
     using Kenc.ACMELib.Exceptions.API;
 
@@ -87,7 +88,7 @@
                 var userContact = Console.ReadLine();
                 try
                 {
-                    account = await acmeClient.RegisterAsync(new[] { "mailto:" + userContact });
+                    account = await acmeClient.RegisterAsync(["mailto:" + userContact]);
                 }
                 catch (Exception ex)
                 {
@@ -112,8 +113,8 @@
             var certificateFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.crt").ToList();
             Console.WriteLine($"Revoking certificates: {string.Join(',', certificateFiles)}");
 
-            var foo = HandleConsoleInput("Continue?", new[] { "y", "yes", "n", "no" }, false).ToLower();
-            if (foo == "y" || foo == "yes")
+            var foo = HandleConsoleInput("Continue?", ["y", "yes", "n", "no"], false).ToLower();
+            if (foo is "y" or "yes")
             {
                 IEnumerable<X509Certificate> certificates = certificateFiles.Select(path => X509Certificate2.CreateFromCertFile(path));
                 foreach (X509Certificate certificate in certificates)
@@ -199,8 +200,8 @@
                         Console.WriteLine($"Unknown challenge type encountered '{challenge.Type}'. Please handle accourdingly.");
                     }
 
-                    var result = HandleConsoleInput("Challenge completed? [y/n]", new[] { "y", "yes", "n", "no" });
-                    if (result == "y" || result == "yes")
+                    var result = HandleConsoleInput("Challenge completed? [y/n]", ["y", "yes", "n", "no"]);
+                    if (result is "y" or "yes")
                     {
                         Console.WriteLine("Validating challenge");
                         var validation = await ValidateChallengeCompletion(challenge, item.Identifier.Value);
@@ -362,12 +363,8 @@
             {
                 Console.WriteLine(prompt);
                 var input = Console.ReadLine();
-                if (!caseSensitive)
-                {
-                    input = input.ToLowerInvariant();
-                }
 
-                if (acceptedResponses.Contains(input))
+                if (acceptedResponses.Contains(input, caseSensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal))
                 {
                     return input;
                 }

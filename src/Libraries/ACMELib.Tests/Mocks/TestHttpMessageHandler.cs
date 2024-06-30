@@ -8,7 +8,7 @@
 
     public class TestHttpMessageHandler : HttpMessageHandler
     {
-        private readonly Dictionary<Uri, Func<HttpRequestMessage, HttpResponseMessage>> responses = new();
+        private readonly Dictionary<Uri, Func<HttpRequestMessage, HttpResponseMessage>> responses = [];
 
         public virtual HttpResponseMessage Send(HttpRequestMessage request)
         {

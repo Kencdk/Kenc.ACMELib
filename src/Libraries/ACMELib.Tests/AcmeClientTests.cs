@@ -36,7 +36,7 @@
 
             var rsaKey = RSA.Create();
             var acmeClient = new ACMEClient(TestHelpers.BaseUri, rsaKey, httpClient);
-            await acmeClient.RegisterAsync(new[] { "test@test.test" });
+            await acmeClient.RegisterAsync(["test@test.test"]);
 
             // assert
             httpRequestMessage.Content.Headers.ContentType.MediaType.Should().Be("application/jose+json");
@@ -59,7 +59,7 @@
 
             var rsaKey = RSA.Create();
             var acmeClient = new ACMEClient(TestHelpers.BaseUri, rsaKey, httpClient);
-            await acmeClient.RegisterAsync(new[] { "test@test.test" });
+            await acmeClient.RegisterAsync(["test@test.test"]);
 
             messageHandlerMock.VerifyAll();
         }

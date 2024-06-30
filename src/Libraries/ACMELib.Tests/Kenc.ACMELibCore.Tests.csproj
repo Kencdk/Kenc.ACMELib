@@ -16,5 +16,4 @@
   <ItemGroup>
     <ProjectReference Include="..\ACMELib\Kenc.ACMELib.csproj" />
   </ItemGroup>
-
 </Project>

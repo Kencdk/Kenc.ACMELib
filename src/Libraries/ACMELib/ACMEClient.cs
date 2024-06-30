@@ -113,14 +113,7 @@
                 {
                     foreach (AuthorizationChallenge challenge in result.Challenges)
                     {
-                        if (challenge.Type == "dns-01")
-                        {
-                            challenge.AuthorizationToken = jws.GetDNSKeyAuthorization(challenge.Token);
-                        }
-                        else
-                        {
-                            challenge.AuthorizationToken = jws.GetKeyAuthorization(challenge.Token);
-                        }
+                        challenge.AuthorizationToken = challenge.Type == "dns-01" ? jws.GetDNSKeyAuthorization(challenge.Token) : jws.GetKeyAuthorization(challenge.Token);
                     }
                 }
 
@@ -139,7 +132,7 @@
 
             if (order.Status != ACMEStatus.Valid)
             {
-                throw new ArgumentOutOfRangeException(nameof(order.Status), "Order status is not in valid range.");
+                throw new ArgumentOutOfRangeException($"{nameof(order)}.{nameof(order.Status)}", "Order status is not in valid range.");
             }
 
             var result = await GetAsync<string>(order.Certificate, cancellationToken);
@@ -271,7 +264,10 @@
                 throw new ArgumentNullException(nameof(order));
             }
 
-            return await GetAsync<Order>(order.Location, cancellationToken);
+            // check order.location
+            return order.Location == null || !order.Location.IsAbsoluteUri
+                ? throw new InvalidOperationException($"order location {order.Location} is either null or not an absolute uri")
+                : await GetAsync<Order>(order.Location, cancellationToken);
         }
 
         private async Task<TResult> GetAsync<TResult>(Uri uri, CancellationToken cancellationToken) where TResult : class
@@ -293,8 +289,14 @@
 
         private async Task<TResult> PostAsync<TResult>(Uri uri, object message, CancellationToken cancellationToken) where TResult : class
         {
-            if (!nonces.TryDequeue(out var nonce))
+            string nonce;
+            while (true)
             {
+                if (nonces.TryDequeue(out nonce))
+                {
+                    break;
+                }
+
                 await NewNonceAsync(cancellationToken);
             }
 
@@ -352,7 +354,7 @@
                 if (httpResponseMessage.Content.Headers.ContentType.MediaType.Equals(ApplicationPemCertChainMime, StringComparison.OrdinalIgnoreCase))
                 {
                     var responseStr = await httpResponseMessage.Content.ReadAsStringAsync();
-                    responseContent = (TResult)(object)(responseStr);
+                    responseContent = (TResult)(object)responseStr;
                 }
                 else
                 {
@@ -382,7 +384,7 @@
                 }
             }
 
-            if (responseContent != null && responseContent is Account account)
+            if (responseContent is not null and Account account)
             {
                 jws.SetKeyId(account);
             }

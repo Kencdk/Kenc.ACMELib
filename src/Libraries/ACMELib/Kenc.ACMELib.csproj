@@ -2,20 +2,17 @@
   <Sdk Name="Microsoft.Build.CentralPackageVersions" Version="2.0.79" />
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup>
     <Description>.net core library for communicating with Let’s Encrypt ACME servers for certificate management.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    
     <!-- nuget package properties -->
-    <PackageId>Kenc.ACMELib</PackageId>
     <PackageId>Kenc.ACMELib</PackageId>
     <PackageTags>ACME LetsEncrypt Certificate</PackageTags>
     <PackageDescription>ACME v2 compliant client implementation</PackageDescription>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-
     <!-- source link properties -->
     <RepositoryType>Github</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
