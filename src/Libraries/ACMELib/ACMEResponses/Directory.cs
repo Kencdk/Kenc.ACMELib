@@ -1,6 +1,8 @@
 ﻿namespace Kenc.ACMELib.ACMEResponses
 {
     using System;
+    using System.Collections.Generic;
+    using System.Text.Json;
     using System.Text.Json.Serialization;
 
     /// <summary>
@@ -28,11 +30,29 @@
 
         [JsonPropertyName("meta")]
         public DirectoryMeta Meta { get; set; }
+
+        [JsonPropertyName("renewalInfo")]
+        public Uri RenewalInfo { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 
     public class DirectoryMeta
     {
         [JsonPropertyName("termsOfService")]
         public string TermsOfService { get; set; }
+
+        [JsonPropertyName("website")]
+        public Uri Website { get; set; }
+
+        [JsonPropertyName("caaIdentities")]
+        public IReadOnlyList<string> CaaIdentities { get; set; }
+
+        [JsonPropertyName("profiles")]
+        public IReadOnlyDictionary<string, Uri> Profiles { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 }
