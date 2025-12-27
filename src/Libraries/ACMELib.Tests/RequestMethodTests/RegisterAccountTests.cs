@@ -1,8 +1,9 @@
-namespace ACMELibCore.Test.RequestMethodTests
+namespace Kenc.ACMELibCore.Tests.RequestMethodTests
 {
     using System;
     using System.Net;
     using System.Threading.Tasks;
+    using FluentAssertions;
     using Kenc.ACMELib;
     using Kenc.ACMELib.ACMEObjects;
     using Kenc.ACMELib.Exceptions;
@@ -42,9 +43,9 @@ namespace ACMELibCore.Test.RequestMethodTests
             (ACMEClient acmeClient, _) = testSystem.Build();
 
             var testContacts = new[] { "mailto:test@test.invalid", "+1 012-3456-789" };
-            ACMEException exception = await Assert.ThrowsExceptionAsync<ACMEException>(() => acmeClient.RegisterAsync(testContacts));
-            Assert.AreEqual(1234, exception.Status);
-            Assert.AreEqual("detail", exception.Message);
+            var action = () => acmeClient.RegisterAsync(testContacts);
+
+            await action.Should().ThrowExactlyAsync<ACMEException>().Where(ex => ex.Status == 1234 && ex.Message == "detail");
         }
     }
 }

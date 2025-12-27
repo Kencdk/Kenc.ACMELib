@@ -5,7 +5,6 @@
     using System.Threading;
     using System.Threading.Tasks;
     using FluentAssertions;
-    using global::ACMELibCore.Test;
     using Kenc.ACMELib;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;

@@ -1,4 +1,4 @@
-﻿namespace ACMELibCore.Test
+﻿namespace Kenc.ACMELibCore.Tests
 {
     using System;
     using System.Linq.Expressions;

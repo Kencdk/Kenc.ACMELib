@@ -1,4 +1,4 @@
-﻿namespace ACMELibCore.Test.Mocks
+﻿namespace Kenc.ACMELibCore.Tests.Mocks
 {
     using System;
     using System.Collections.Generic;

@@ -1,10 +1,11 @@
-namespace ACMELibCore.Test.RequestMethodTests
+namespace Kenc.ACMELibCore.Tests.RequestMethodTests
 {
     using System;
     using System.Net.Http;
     using System.Threading.Tasks;
-    using ACMELibCore.Test.Mocks;
+    using FluentAssertions;
     using Kenc.ACMELib;
+    using Kenc.ACMELibCore.Tests.Mocks;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -30,13 +31,13 @@ namespace ACMELibCore.Test.RequestMethodTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task ValidateAcmeClientThrowsArgumentNullExceptionWhenCertificateIsNull()
         {
             TestSystem testSystem = new TestSystem().WithDirectoryResponse();
             (ACMEClient acmeClient, Moq.Mock<HttpClient> _) = testSystem.Build();
 
-            await acmeClient.RevokeCertificateAsync(null, RevocationReason.PriviledgeWithdrawn);
+            var action = async () => await acmeClient.RevokeCertificateAsync(null, RevocationReason.PriviledgeWithdrawn);
+            await action.Should().ThrowAsync<ArgumentNullException>();
         }
     }
 }

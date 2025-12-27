@@ -100,7 +100,7 @@
             Console.WriteLine("Enter domain(s) to validate and request certificate(s) for (wildcard? add wildcard and tld comma separated):");
             var domainNames = Console.ReadLine().Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 
-            if (!domainNames.Any())
+            if (domainNames.Length == 0)
             {
                 Console.WriteLine("Invalid domain aborting.");
                 return;
@@ -116,7 +116,7 @@
             var foo = HandleConsoleInput("Continue?", ["y", "yes", "n", "no"], false).ToLower();
             if (foo is "y" or "yes")
             {
-                IEnumerable<X509Certificate> certificates = certificateFiles.Select(path => X509Certificate2.CreateFromCertFile(path));
+                IEnumerable<X509Certificate> certificates = certificateFiles.Select(path => X509CertificateLoader.LoadCertificateFromFile(path));
                 foreach (X509Certificate certificate in certificates)
                 {
                     try

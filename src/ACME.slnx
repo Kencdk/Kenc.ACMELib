@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Examples/">
+    <Project Path="Examples/ACMEClient/ACMEClient.csproj" />
+    <Project Path="Examples/CloudflareIntegration/CloudflareIntegration.csproj" />
+    <Project Path="Examples/Shared/Shared.csproj" />
+  </Folder>
+  <Project Path="Libraries/ACMELib.Tests/Kenc.ACMELibCore.Tests.csproj" />
+  <Project Path="Libraries/ACMELib/Kenc.ACMELib.csproj" />
+</Solution>

@@ -10,7 +10,7 @@ variables:
    major: 1
    minor: 0
    beta: ${{ variables.beta }} 
-   solution: '**/*.sln'
+   solution: '**/*.slnx'
    buildConfiguration: 'Release'
 
 stages:

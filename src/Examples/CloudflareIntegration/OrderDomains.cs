@@ -106,7 +106,7 @@
 
                 var missingDomains = cleanedupDomains.Except(CloudflareZones.Keys, StringComparer.OrdinalIgnoreCase)
                     .ToList();
-                if (missingDomains.Any())
+                if (missingDomains.Count != 0)
                 {
                     throw new Exception($"The following domains are not accesible in the cloudflare account. {string.Join(',', missingDomains)}");
                 }
@@ -166,7 +166,7 @@
             if (acmeDirectory.NewAuthz != null)
             {
                 Console.WriteLine("Target CA supports NewAuthz");
-                Task<AuthorizationChallengeResponse>[] preAuthorizationChallenges = options.Domains.Where(x => !x.StartsWith("*"))
+                Task<AuthorizationChallengeResponse>[] preAuthorizationChallenges = options.Domains.Where(x => !x.StartsWith('*'))
                     .Select(x => NewAuthorizationAsync(acmeClient, x))
                     .ToArray();
 
@@ -252,7 +252,8 @@
             if (failedAuthorizations.Any())
             {
                 throw new Exception($"Failed to authorize the following domains {string.Join(',', failedAuthorizations)}.");
-            };
+            }
+            ;
 
             if (order.Location == null)
             {
@@ -376,7 +377,7 @@
             filename = filename.Replace("*", "");
             if (filename.StartsWith('.'))
             {
-                filename = filename.Remove(0, 1);
+                filename = filename[1..];
             }
 
             return filename;
